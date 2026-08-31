@@ -17,7 +17,7 @@ Popup React
           Futuro: NativeMessagingTransport → bridge → Auri Desktop
 ```
 
-O service worker MV3 é mínimo e não mantém conexões, polling ou lógica de UI. Ele existe como ponto de entrada para a etapa futura do bridge.
+Não há service worker nesta versão. Ele será adicionado somente quando o bridge Native Messaging tiver uma função concreta.
 
 ## Stack
 
@@ -27,29 +27,19 @@ O service worker MV3 é mínimo e não mantém conexões, polling ou lógica de 
 - Vitest e Testing Library;
 - Manifest V3;
 - CSS próprio;
-- `@auri/protocol` 0.1.0.
+- `@auri/protocol` 0.1.2 (protocolVersion 1).
 
 ## Integração com `@auri/protocol`
 
 O pacote é consumido exclusivamente pela API pública. `PageContext`, schemas, parâmetros/resultados de métodos, capabilities e `PROTOCOL_VERSION` são importados do pacote; nenhum contrato foi copiado para a extensão.
 
-Durante o desenvolvimento local, a dependência usa:
+O Protocol é instalado diretamente da tag GitHub correspondente à versão 0.1.2:
 
 ```json
-"@auri/protocol": "file:../Auri-Protocol"
+"@auri/protocol": "github:Fish7w7/Auri-Protocol#v0.1.2"
 ```
 
-Mantenha os repositórios irmãos com esta estrutura:
-
-```text
-ProjetosVsCode/
-  ├─ Auri-Extension/
-  └─ Auri-Protocol/
-```
-
-O pacote `Auri-Protocol` precisa ter seu `dist/` gerado. Se a estrutura local for diferente, ajuste apenas o caminho `file:` ou use um workspace npm que mantenha ambos os projetos irmãos. O pacote continua privado e não é publicado.
-
-Na CI, os dois repositórios são baixados como irmãos. Se `Auri-Protocol` for privado e o token padrão não puder acessá-lo, configure o secret `AURI_PROTOCOL_TOKEN` com acesso somente de leitura.
+A dependência é pinada e não exige um repositório irmão. O lifecycle `prepare` do Protocol gera `dist/` durante a instalação Git, mantendo os artefatos compilados fora do controle de versão. Para trabalhar simultaneamente nos dois repositórios, `npm link` pode ser usado apenas como conveniência local, sem alterar a dependência oficial.
 
 ## Extração de página
 
@@ -106,8 +96,7 @@ O popup tem navegação nativa por teclado, foco visível, regiões com rótulos
 O manifest solicita somente:
 
 - `activeTab`: acesso temporário à aba após ação do usuário;
-- `scripting`: leitura sob demanda do contexto da página;
-- `storage`: reservado para preferências pequenas futuras; nenhum dado de página, obra ou progresso é persistido na 0.1.0.
+- `scripting`: leitura sob demanda do contexto da página.
 
 Não há `<all_urls>`. `nativeMessaging` foi deliberadamente omitida até existir um bridge real.
 
@@ -117,7 +106,7 @@ A extensão não coleta histórico, não observa abas em background, não execut
 
 ## Desenvolvimento
 
-Requisitos: Node.js 20+ e o repositório irmão `Auri-Protocol` com build disponível.
+Requisito: Node.js 20+. O `@auri/protocol` é obtido automaticamente da tag GitHub pinada.
 
 ```bash
 npm install

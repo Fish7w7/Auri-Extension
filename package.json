@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@auri/protocol": "file:../Auri-Protocol",
+    "@auri/protocol": "github:Fish7w7/Auri-Protocol#v0.1.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

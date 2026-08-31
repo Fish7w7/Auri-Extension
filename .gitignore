@@ -1,7 +1,26 @@
+# Dependências
 node_modules/
+
+# Build e cobertura
 dist/
 coverage/
-*.local
+.vite/
+*.tsbuildinfo
+
+# Variáveis locais
 .env
 .env.*
 !.env.example
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Validações temporárias locais
+.clean-validation-*/
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+.idea/

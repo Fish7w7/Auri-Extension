@@ -10,35 +10,21 @@ jobs:
     steps:
       - name: Checkout Auri Extension
         uses: actions/checkout@v4
-        with:
-          path: workspace/Auri-Extension
-
-      - name: Checkout @auri/protocol
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/Auri-Protocol
-          token: ${{ secrets.AURI_PROTOCOL_TOKEN || github.token }}
-          path: workspace/Auri-Protocol
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: workspace/Auri-Extension/package-lock.json
 
       - name: Install
         run: npm ci
-        working-directory: workspace/Auri-Extension
 
       - name: Test
         run: npm test
-        working-directory: workspace/Auri-Extension
 
       - name: Typecheck
         run: npm run typecheck
-        working-directory: workspace/Auri-Extension
 
       - name: Build
         run: npm run build
-        working-directory: workspace/Auri-Extension
