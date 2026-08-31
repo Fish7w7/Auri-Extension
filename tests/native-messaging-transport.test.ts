@@ -8,10 +8,9 @@ import {
 } from "@auri/protocol";
 import { describe, expect, it, vi } from "vitest";
 
-import { NATIVE_HOST } from "../src/config/extension";
+import { NATIVE_HOST } from "../src/config/native-hosts";
 import { TransportFailure } from "../src/transport/auri-transport";
-import { createTransport } from "../src/transport/create-transport";
-import { MockAuriTransport } from "../src/transport/mock-auri-transport";
+import { selectTransport } from "../src/transport/create-transport";
 import { NativeMessagingTransport } from "../src/transport/native-messaging-transport";
 import type {
   NativeDisconnectListener,
@@ -75,55 +74,36 @@ const helloResult = {
 };
 
 describe("seleção do transporte", () => {
-  it("build production usa somente o host PROD", async () => {
-    const runtime = new FakeRuntime();
-    const transport = createTransport({
-      environment: { MODE: "production" },
-      nativeRuntime: runtime,
+  it("build production usa somente o host PROD", () => {
+    expect(selectTransport({ MODE: "production" })).toEqual({
+      kind: "native",
+      hostName: NATIVE_HOST.production,
     });
-
-    const pending = transport.hello(helloParams);
-    expect(runtime.hosts).toEqual([NATIVE_HOST.production]);
-    expect(runtime.hosts).not.toContain(NATIVE_HOST.development);
-    transport.close();
-    await expect(pending).rejects.toMatchObject({ kind: "disconnected" });
   });
 
-  it("build dev-native usa somente o host DEV", async () => {
-    const runtime = new FakeRuntime();
-    const native = createTransport({
-      environment: { MODE: "dev-native", VITE_AURI_TRANSPORT: "mock" },
-      nativeRuntime: runtime,
+  it("build dev-native usa somente o host DEV", () => {
+    expect(selectTransport({
+      MODE: "dev-native",
+      VITE_AURI_TRANSPORT: "mock",
+    })).toEqual({
+      kind: "native",
+      hostName: NATIVE_HOST.development,
     });
-    const pending = native.hello(helloParams);
-    expect(runtime.hosts).toEqual([NATIVE_HOST.development]);
-    expect(runtime.hosts).not.toContain(NATIVE_HOST.production);
-    native.close();
-    await expect(pending).rejects.toBeInstanceOf(TransportFailure);
   });
 
   it("DEV mock e fallback de desenvolvimento usam MockAuriTransport", () => {
-    expect(createTransport({
-      environment: { MODE: "development", VITE_AURI_TRANSPORT: "mock" },
-    })).toBeInstanceOf(MockAuriTransport);
-    expect(createTransport({
-      environment: { MODE: "development" },
-    })).toBeInstanceOf(MockAuriTransport);
+    expect(selectTransport({
+      MODE: "development",
+      VITE_AURI_TRANSPORT: "mock",
+    })).toMatchObject({ kind: "mock" });
+    expect(selectTransport({ MODE: "development" })).toMatchObject({ kind: "mock" });
   });
 
-  it("produção ignora configuração mock", async () => {
-    const runtime = new FakeRuntime();
-    const transport = createTransport({
-      environment: { MODE: "production", VITE_AURI_TRANSPORT: "mock" },
-      nativeRuntime: runtime,
-    });
-
-    expect(transport).toBeInstanceOf(NativeMessagingTransport);
-    const pending = transport.hello(helloParams);
-    expect(runtime.hosts).toEqual([NATIVE_HOST.production]);
-    expect(runtime.hosts).not.toContain(NATIVE_HOST.development);
-    transport.close();
-    await expect(pending).rejects.toBeInstanceOf(TransportFailure);
+  it("produção ignora configuração mock", () => {
+    expect(selectTransport({
+      MODE: "production",
+      VITE_AURI_TRANSPORT: "mock",
+    })).toEqual({ kind: "native", hostName: NATIVE_HOST.production });
   });
 });
 
@@ -321,13 +301,16 @@ describe("limites e hello", () => {
     expect(limitedRuntime.ports[0].posted).toHaveLength(0);
   });
 
-  it("aceita hello compatível e usa somente as capabilities recebidas", async () => {
+  it("aceita hello com capability futura desconhecida", async () => {
     const runtime = new FakeRuntime();
     const transport = new NativeMessagingTransport({
       hostName: "test.host", runtime, createRequestId: () => "hello-id",
     });
     const pending = transport.hello(helloParams);
-    const negotiated = { ...helloResult, capabilities: ["work.resolve" as const] };
+    const negotiated = {
+      ...helloResult,
+      capabilities: ["work.resolve", "future.someCapability"],
+    };
     runtime.ports[0].emitMessage(createSuccessResponse(
       "hello-id", PROTOCOL_METHOD.systemHello, negotiated,
     ));

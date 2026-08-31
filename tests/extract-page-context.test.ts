@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { extractPageContext } from "../src/extraction/extract-page-context";
-import type { PageSnapshot } from "../src/extraction/page-snapshot";
+import { collectPageSnapshot, type PageSnapshot } from "../src/extraction/page-snapshot";
 
 const snapshot = (values: Partial<PageSnapshot> = {}): PageSnapshot => ({
   currentUrl: "https://reader.example/series/nano-machine",
@@ -9,6 +9,19 @@ const snapshot = (values: Partial<PageSnapshot> = {}): PageSnapshot => ({
 });
 
 describe("extractPageContext", () => {
+  it("coleta og:image e twitter:image da metadata explícita", () => {
+    document.head.innerHTML = `
+      <meta property="og:image" content="https://site.test/cover.jpg">
+      <meta name="twitter:image" content="https://site.test/twitter.jpg">
+    `;
+
+    const collected = collectPageSnapshot();
+
+    expect(collected.ogImage).toBe("https://site.test/cover.jpg");
+    expect(collected.twitterImage).toBe("https://site.test/twitter.jpg");
+    document.head.innerHTML = "";
+  });
+
   it("prioriza og:title e normaliza apenas espaços", () => {
     const result = extractPageContext(snapshot({ ogTitle: "  Nano   Machine  ", documentTitle: "Outro" }));
     expect(result).toMatchObject({ ok: true, context: { title: "Nano Machine" } });
@@ -43,6 +56,56 @@ describe("extractPageContext", () => {
       ok: true,
       context: { siteName: "reader.example" },
     });
+  });
+
+  it("extrai og:image HTTP(S) sem adicionar capa ao PageContext", () => {
+    const result = extractPageContext(snapshot({
+      ogImage: "https://site.test/cover.jpg",
+    }));
+
+    expect(result).toMatchObject({
+      ok: true,
+      coverUrl: "https://site.test/cover.jpg",
+    });
+    expect(result.ok && "coverUrl" in result.context).toBe(false);
+  });
+
+  it("usa twitter:image como fallback e mantém prioridade de og:image", () => {
+    expect(extractPageContext(snapshot({
+      twitterImage: "https://site.test/twitter.jpg",
+    }))).toMatchObject({
+      ok: true,
+      coverUrl: "https://site.test/twitter.jpg",
+    });
+    expect(extractPageContext(snapshot({
+      ogImage: "https://site.test/og.jpg",
+      twitterImage: "https://site.test/twitter.jpg",
+    }))).toMatchObject({
+      ok: true,
+      coverUrl: "https://site.test/og.jpg",
+    });
+  });
+
+  it("resolve capa relativa contra document.baseURI", () => {
+    expect(extractPageContext(snapshot({
+      currentUrl: "https://example.com/work/1",
+      documentBaseUri: "https://example.com/work/1",
+      ogImage: "/covers/a.jpg",
+    }))).toMatchObject({
+      ok: true,
+      coverUrl: "https://example.com/covers/a.jpg",
+    });
+  });
+
+  it.each([
+    "data:image/png;base64,AAAA",
+    "blob:https://site.test/cover-id",
+    "file:///covers/a.jpg",
+    "javascript:alert(1)",
+  ])("ignora capa com scheme inseguro sem invalidar a página: %s", (ogImage) => {
+    const result = extractPageContext(snapshot({ ogImage }));
+    expect(result).toMatchObject({ ok: true });
+    expect(result.ok && result.coverUrl).toBeUndefined();
   });
 
   it("detecta capítulo rotulado na URL com confiança alta", () => {

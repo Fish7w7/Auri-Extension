@@ -1,4 +1,5 @@
 import {
+  coverUrlSchema,
   pageContextSchema,
   type DetectedChapter,
   type PageContext,
@@ -15,7 +16,7 @@ const LABELED_CHAPTER = new RegExp(
 const METADATA_NUMBER = new RegExp(String.raw`^\s*${CHAPTER_VALUE}\s*$`, "u");
 
 export type ExtractionResult =
-  | { ok: true; context: PageContext }
+  | { ok: true; context: PageContext; coverUrl?: string }
   | { ok: false; reason: "unsupported" };
 
 function cleanText(value: string | undefined, maximum: number): string | undefined {
@@ -79,6 +80,22 @@ export function detectChapter(snapshot: PageSnapshot): DetectedChapter | undefin
   return chapterFrom(snapshot.heading, "metadata", "low");
 }
 
+export function extractCoverUrl(
+  snapshot: PageSnapshot,
+  currentUrl: URL,
+): string | undefined {
+  const documentBaseUrl = parseHttpUrl(snapshot.documentBaseUri, currentUrl.href);
+  const baseUrl = documentBaseUrl?.href ?? currentUrl.href;
+
+  for (const candidate of [snapshot.ogImage, snapshot.twitterImage]) {
+    const parsedUrl = parseHttpUrl(candidate, baseUrl);
+    if (!parsedUrl) continue;
+    const parsedCover = coverUrlSchema.safeParse(parsedUrl.href);
+    if (parsedCover.success) return parsedCover.data;
+  }
+  return undefined;
+}
+
 export function extractPageContext(snapshot: PageSnapshot): ExtractionResult {
   const currentUrl = parseHttpUrl(snapshot.currentUrl);
   if (!currentUrl) return { ok: false, reason: "unsupported" };
@@ -90,6 +107,7 @@ export function extractPageContext(snapshot: PageSnapshot): ExtractionResult {
   );
   const siteName = cleanText(snapshot.ogSiteName ?? currentUrl.hostname, 160);
   const detectedChapter = detectChapter(snapshot);
+  const coverUrl = extractCoverUrl(snapshot, currentUrl);
   const candidate: PageContext = {
     url: currentUrl.href,
     ...(canonicalUrl ? { canonicalUrl: canonicalUrl.href } : {}),
@@ -101,6 +119,10 @@ export function extractPageContext(snapshot: PageSnapshot): ExtractionResult {
 
   const parsed = pageContextSchema.safeParse(candidate);
   return parsed.success
-    ? { ok: true, context: parsed.data }
+    ? {
+        ok: true,
+        context: parsed.data,
+        ...(coverUrl ? { coverUrl } : {}),
+      }
     : { ok: false, reason: "unsupported" };
 }

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Auri Extension",
+  "name": "Auri",
   "version": "0.1.0",
-  "description": "Leve o contexto da página atual ao Auri, sob seu comando.",
+  "description": "Conecte suas leituras no navegador à sua biblioteca local do Auri Desktop.",
   "permissions": ["activeTab", "scripting", "nativeMessaging"],
   "icons": {
     "16": "icons/auri-16.png",

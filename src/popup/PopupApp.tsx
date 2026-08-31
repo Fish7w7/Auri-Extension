@@ -1,6 +1,7 @@
 import {
   PROTOCOL_VERSION,
-  type Capability,
+  isKnownCapability,
+  type KnownCapability,
   type DesktopOpenAddWorkParams,
   type PageContext,
   type WorkResolveResult,
@@ -47,7 +48,8 @@ export function PopupApp({
         setState({ status: "incompatible", context: page.context });
         return;
       }
-      if (!hello.capabilities.includes("work.resolve")) {
+      const capabilities = hello.capabilities.filter(isKnownCapability);
+      if (!capabilities.includes("work.resolve")) {
         setState({ status: "error", context: page.context });
         return;
       }
@@ -57,7 +59,8 @@ export function PopupApp({
         status: "ready",
         context: page.context,
         result,
-        capabilities: hello.capabilities,
+        capabilities,
+        ...(page.coverUrl ? { coverUrl: page.coverUrl } : {}),
       });
     } catch (error) {
       if (isDesktopUnavailableFailure(error)) {
@@ -85,7 +88,10 @@ interface PopupViewProps {
   onRetry: () => void | Promise<void>;
 }
 
-const hasCapability = (capabilities: Capability[], capability: Capability) =>
+const hasCapability = (
+  capabilities: KnownCapability[],
+  capability: KnownCapability,
+) =>
   capabilities.includes(capability);
 
 const formatChapter = (chapter: { value: string } | null | undefined) =>
@@ -228,7 +234,7 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
     );
   }
 
-  const { context, result, capabilities } = state;
+  const { context, result, capabilities, coverUrl } = state;
   const actionFeedback = feedback ? <p className="feedback" role="status">{feedback}</p> : null;
 
   if (result.status === "not_found") {
@@ -238,6 +244,9 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
       ...(context.canonicalUrl ? { canonicalUrl: context.canonicalUrl } : {}),
       ...(context.detectedChapter ? { detectedChapter: context.detectedChapter } : {}),
       ...(context.siteName ? { sourceName: context.siteName } : {}),
+      ...(coverUrl && hasCapability(capabilities, "desktop.openAddWork.coverUrl")
+        ? { coverUrl }
+        : {}),
     };
     const canAdd = hasCapability(capabilities, "desktop.openAddWork");
 
@@ -316,7 +325,7 @@ function MatchedView({
 }: {
   context: PageContext;
   result: Extract<WorkResolveResult, { status: "matched" }>;
-  capabilities: Capability[];
+  capabilities: KnownCapability[];
   transport: AuriTransport;
   pending?: string;
   feedback: React.ReactNode;

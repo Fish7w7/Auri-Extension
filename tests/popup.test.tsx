@@ -1,12 +1,16 @@
 import {
   CAPABILITIES,
-  type Capability,
+  PROTOCOL_VERSION,
+  type DesktopOpenAddWorkParams,
+  type DesktopOpenAddWorkResult,
+  type KnownCapability,
   type PageContext,
   type ProgressUpdateParams,
   type SystemHelloParams,
+  type WorkResolveParams,
   type WorkResolveResult,
 } from "@auri/protocol";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { PopupApp, PopupView } from "../src/popup/PopupApp";
@@ -48,12 +52,31 @@ function renderState(state: PopupState) {
   return render(<PopupView state={state} transport={transport} onRetry={vi.fn()} />);
 }
 
-const ready = (result: WorkResolveResult, values: Partial<{ context: PageContext; capabilities: Capability[] }> = {}): PopupState => ({
+const ready = (
+  result: WorkResolveResult,
+  values: Partial<{
+    context: PageContext;
+    capabilities: KnownCapability[];
+    coverUrl: string;
+  }> = {},
+): PopupState => ({
   status: "ready",
   context: values.context ?? context,
   result,
   capabilities: values.capabilities ?? [...CAPABILITIES],
+  ...(values.coverUrl ? { coverUrl: values.coverUrl } : {}),
 });
+
+class RecordingAddWorkTransport extends MockAuriTransport {
+  openAddWorkParams?: DesktopOpenAddWorkParams;
+
+  override openAddWork(
+    params: DesktopOpenAddWorkParams,
+  ): Promise<DesktopOpenAddWorkResult> {
+    this.openAddWorkParams = params;
+    return Promise.resolve({ opened: true });
+  }
+}
 
 describe("PopupView", () => {
   it("mostra loading leve", () => {
@@ -79,6 +102,49 @@ describe("PopupView", () => {
     renderState(ready({ status: "not_found" }));
     expect(screen.getByText("Esta obra ainda não está na sua Biblioteca.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Adicionar ao Auri" })).toBeInTheDocument();
+  });
+
+  it("omite coverUrl para Desktop antigo mesmo quando a página tem capa", async () => {
+    const oldDesktopCapabilities = CAPABILITIES.filter(
+      (capability) => capability !== "desktop.openAddWork.coverUrl",
+    );
+    const recordingTransport = new RecordingAddWorkTransport("not_found");
+    render(<PopupView
+      state={ready(
+        { status: "not_found" },
+        {
+          capabilities: oldDesktopCapabilities,
+          coverUrl: "https://site.test/cover.jpg",
+        },
+      )}
+      transport={recordingTransport}
+      onRetry={vi.fn()}
+    />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Adicionar ao Auri" }));
+    await waitFor(() => expect(recordingTransport.openAddWorkParams).toBeDefined());
+
+    expect(recordingTransport.openAddWorkParams).not.toHaveProperty("coverUrl");
+  });
+
+  it("inclui coverUrl quando o Desktop anuncia a capability", async () => {
+    const recordingTransport = new RecordingAddWorkTransport("not_found");
+    render(<PopupView
+      state={ready(
+        { status: "not_found" },
+        { coverUrl: "https://site.test/cover.jpg" },
+      )}
+      transport={recordingTransport}
+      onRetry={vi.fn()}
+    />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Adicionar ao Auri" }));
+    await waitFor(() => expect(recordingTransport.openAddWorkParams).toBeDefined());
+
+    expect(recordingTransport.openAddWorkParams).toHaveProperty(
+      "coverUrl",
+      "https://site.test/cover.jpg",
+    );
   });
 
   it("mostra candidatos ambíguos sem escolher automaticamente", () => {
@@ -145,6 +211,43 @@ describe("PopupView", () => {
 });
 
 describe("PopupApp com falhas do transporte nativo", () => {
+  it("ignora capability futura desconhecida e continua work.resolve", async () => {
+    class FutureCapabilitiesTransport extends MockAuriTransport {
+      resolveParams?: WorkResolveParams;
+
+      override hello(
+        _params: SystemHelloParams,
+      ): ReturnType<MockAuriTransport["hello"]> {
+        return Promise.resolve({
+          protocolVersion: PROTOCOL_VERSION,
+          server: { kind: "desktop", name: "Auri Desktop", version: "2.0.0" },
+          capabilities: ["work.resolve", "work.open", "future.capability"],
+        });
+      }
+
+      override resolveWork(
+        params: WorkResolveParams,
+      ): ReturnType<MockAuriTransport["resolveWork"]> {
+        this.resolveParams = params;
+        return super.resolveWork(params);
+      }
+    }
+    const futureTransport = new FutureCapabilitiesTransport("matched");
+    render(<PopupApp
+      transport={futureTransport}
+      readPage={async () => ({
+        status: "ready",
+        context,
+        coverUrl: "https://site.test/cover.jpg",
+      })}
+    />);
+
+    expect(await screen.findByRole("heading", { name: "Nano Machine" })).toBeInTheDocument();
+    expect(screen.queryByText(/protocolo incompatível/iu)).not.toBeInTheDocument();
+    expect(futureTransport.resolveParams).toEqual(context);
+    expect(futureTransport.resolveParams).not.toHaveProperty("coverUrl");
+  });
+
   it.each([
     ["host ausente", new TransportFailure("host_not_found")],
     ["Port desconectado", new TransportFailure("disconnected")],

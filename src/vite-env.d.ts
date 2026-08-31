@@ -8,3 +8,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+declare const __AURI_BUILD_TRANSPORT__: "mock" | "native";
+declare const __AURI_NATIVE_HOST__: string;

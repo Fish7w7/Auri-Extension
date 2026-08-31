@@ -1,8 +1,7 @@
 import type { AuriTransport } from "./auri-transport";
-import { NATIVE_HOST } from "../config/extension";
+import { NATIVE_HOST } from "../config/native-hosts";
 import { getMockScenario, MockAuriTransport } from "./mock-auri-transport";
 import { NativeMessagingTransport } from "./native-messaging-transport";
-import type { NativeMessagingRuntime } from "./native-messaging-runtime";
 
 export interface TransportEnvironment {
   readonly MODE: string;
@@ -10,24 +9,13 @@ export interface TransportEnvironment {
   readonly VITE_AURI_MOCK_SCENARIO?: string;
 }
 
-export interface CreateTransportOptions {
-  readonly environment?: TransportEnvironment;
-  readonly nativeRuntime?: NativeMessagingRuntime;
-}
+export type TransportSelection =
+  | { readonly kind: "native"; readonly hostName: string }
+  | { readonly kind: "mock"; readonly scenario: ReturnType<typeof getMockScenario> };
 
-const BUILD_ENVIRONMENT: TransportEnvironment = {
-  MODE: import.meta.env.MODE,
-  VITE_AURI_TRANSPORT: import.meta.env.VITE_AURI_TRANSPORT,
-  VITE_AURI_MOCK_SCENARIO: import.meta.env.VITE_AURI_MOCK_SCENARIO,
-};
-
-export function createTransport(options: CreateTransportOptions = {}): AuriTransport {
-  const environment = options.environment ?? BUILD_ENVIRONMENT;
+export function selectTransport(environment: TransportEnvironment): TransportSelection {
   if (environment.MODE === "production") {
-    return new NativeMessagingTransport({
-      hostName: NATIVE_HOST.production,
-      runtime: options.nativeRuntime,
-    });
+    return { kind: "native", hostName: NATIVE_HOST.production };
   }
   if (
     environment.MODE === "dev-native" ||
@@ -36,10 +24,17 @@ export function createTransport(options: CreateTransportOptions = {}): AuriTrans
       environment.VITE_AURI_TRANSPORT === "native"
     )
   ) {
-    return new NativeMessagingTransport({
-      hostName: NATIVE_HOST.development,
-      runtime: options.nativeRuntime,
-    });
+    return { kind: "native", hostName: NATIVE_HOST.development };
   }
-  return new MockAuriTransport(getMockScenario(environment.VITE_AURI_MOCK_SCENARIO));
+  return {
+    kind: "mock",
+    scenario: getMockScenario(environment.VITE_AURI_MOCK_SCENARIO),
+  };
+}
+
+export function createTransport(): AuriTransport {
+  if (__AURI_BUILD_TRANSPORT__ === "native") {
+    return new NativeMessagingTransport({ hostName: __AURI_NATIVE_HOST__ });
+  }
+  return new MockAuriTransport(getMockScenario(import.meta.env.VITE_AURI_MOCK_SCENARIO));
 }

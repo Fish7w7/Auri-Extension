@@ -4,7 +4,7 @@ import { extractPageContext } from "./extract-page-context";
 import { collectPageSnapshot } from "./page-snapshot";
 
 export type ActivePageResult =
-  | { status: "ready"; context: PageContext }
+  | { status: "ready"; context: PageContext; coverUrl?: string }
   | { status: "unsupported" };
 
 export async function readActivePage(): Promise<ActivePageResult> {
@@ -29,7 +29,11 @@ export async function readActivePage(): Promise<ActivePageResult> {
 
     const extraction = extractPageContext(injection.result);
     return extraction.ok
-      ? { status: "ready", context: extraction.context }
+      ? {
+          status: "ready",
+          context: extraction.context,
+          ...(extraction.coverUrl ? { coverUrl: extraction.coverUrl } : {}),
+        }
       : { status: "unsupported" };
   } catch (error) {
     if (import.meta.env.DEV) console.error("Falha ao analisar a página ativa", error);

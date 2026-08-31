@@ -1,12 +1,16 @@
-# Auri Extension
+# Auri
 
-Auri Extension é a extensão oficial do ecossistema Auri para Google Chrome e Microsoft Edge. Ela coleta, somente após uma ação explícita do usuário, o contexto mínimo da página atual e o apresenta ao Auri Desktop por uma abstração de transporte.
+Auri é a extensão oficial que conecta suas leituras no navegador à biblioteca local do Auri Desktop.
 
-Esta é a versão **0.1.0**: uma base local-first, sem conta, servidor, cloud, analytics ou monitoramento permanente da navegação. O popup já contém o transporte Native Messaging; o host e seu registro no navegador continuam sendo responsabilidade do instalador do Auri Desktop.
+## Para usuários
 
-## Estado atual
+A extensão analisa a aba ativa somente quando você abre o popup. Ela permite localizar a obra na sua Biblioteca, abrir o Auri, sugerir uma nova obra ou Fonte e atualizar o progresso. O **Auri Desktop é obrigatório** e continua responsável pela Biblioteca e pelos dados locais.
 
-O popup analisa páginas HTTP/HTTPS sob demanda, identifica metadata útil de forma conservadora e permite simular o fluxo completo da futura integração. O Desktop permanece responsável pela Biblioteca, obras, Fontes, progresso, histórico e regras de negócio.
+A versão **0.1.0** é destinada a Google Chrome, Microsoft Edge e navegadores Chromium compatíveis, incluindo Brave. Não há conta, servidor Auri, cloud, analytics ou monitoramento permanente da navegação. Consulte a [política de privacidade](PRIVACY.md).
+
+## Arquitetura
+
+O popup analisa páginas HTTP/HTTPS sob demanda e identifica metadata útil de forma conservadora. O Desktop permanece responsável pela Biblioteca, obras, Fontes, progresso, histórico e regras de negócio.
 
 ```text
 Popup React
@@ -27,16 +31,16 @@ Não há service worker nesta versão. O popup abre diretamente um Port Native M
 - Vitest e Testing Library;
 - Manifest V3;
 - CSS próprio;
-- `@auri/protocol` 0.1.2 (protocolVersion 1).
+- `@auri/protocol` 0.1.3 (protocolVersion 1).
 
 ## Integração com `@auri/protocol`
 
 O pacote é consumido exclusivamente pela API pública. `PageContext`, schemas, parâmetros/resultados de métodos, capabilities e `PROTOCOL_VERSION` são importados do pacote; nenhum contrato foi copiado para a extensão.
 
-O Protocol é instalado diretamente da tag GitHub correspondente à versão 0.1.2:
+O Protocol é instalado diretamente da tag GitHub correspondente à versão 0.1.3:
 
 ```json
-"@auri/protocol": "github:Fish7w7/Auri-Protocol#v0.1.2"
+"@auri/protocol": "github:Fish7w7/Auri-Protocol#v0.1.3"
 ```
 
 A dependência é pinada e não exige um repositório irmão. O lifecycle `prepare` do Protocol gera `dist/` durante a instalação Git, mantendo os artefatos compilados fora do controle de versão. Para trabalhar simultaneamente nos dois repositórios, `npm link` pode ser usado apenas como conveniência local, sem alterar a dependência oficial.
@@ -70,7 +74,9 @@ O popup conhece apenas essa interface. O mode `production`, usado por `npm run b
 
 O transporte mantém um Port por popup, cria envelopes e valida respostas pela API pública do Protocol, correlaciona respostas por ID mesmo fora de ordem, limita mensagens pelo tamanho UTF-8 do contrato e aplica timeout de 20 segundos. O primeiro pedido é sempre `system.hello`, e somente as capabilities retornadas por ele habilitam ações.
 
-As ações só aparecem quando a capability correspondente é negociada. A atualização de progresso também exige capítulo numérico com confiança suficiente e estritamente posterior ao progresso atual. Nunca há regressão ou atualização automática.
+As ações só aparecem quando a capability correspondente é negociada. Capabilities futuras desconhecidas são aceitas no wire e ignoradas com o narrowing público do Protocol. A atualização de progresso também exige capítulo numérico com confiança suficiente e estritamente posterior ao progresso atual. Nunca há regressão ou atualização automática.
+
+A extração também lê, de forma conservadora, `og:image` e o fallback `twitter:image`. URLs relativas são resolvidas contra a base do documento e somente HTTP/HTTPS é aceito. A capa permanece fora de `PageContext` e só segue em `desktop.openAddWork` quando o Desktop anuncia `desktop.openAddWork.coverUrl`.
 
 ## Cenários de mock
 
@@ -132,6 +138,19 @@ npm run typecheck
 npm run build
 ```
 
+## Distribuição
+
+O pacote de loja é gerado somente depois do build oficial de produção:
+
+```bash
+npm run build
+npm run package:store
+```
+
+O resultado é `release/auri-extension-0.1.0-chromium.zip`, compartilhado por Chrome e Edge e compatível com Brave. O ZIP contém apenas `dist/`, sem source, testes, configurações DEV, `node_modules` ou sourcemaps.
+
+Textos para as lojas estão em [docs/store-listing.md](docs/store-listing.md) e os passos de publicação em [docs/release-checklist.md](docs/release-checklist.md). Nenhum ID oficial é presumido: os IDs de Chrome, Edge e Brave serão obtidos ou confirmados após a distribuição e então configurados no release do Auri Desktop.
+
 ## Carregar a extensão unpacked
 
 Primeiro execute `npm run build`. A pasta `dist/` conterá `manifest.json`, popup e assets, sem service worker.
@@ -156,10 +175,10 @@ O símbolo oficial foi integrado a partir de `Auri/build/auri-icon.png`. Os asse
 
 ## Limitações e roadmap imediato
 
-O transporte da extensão está implementado, mas a conexão real ponta a ponta ainda depende da instalação do host e do registro feita pelo Auri Desktop; ela não é validável apenas neste repositório. Também não há suporte a Firefox, adaptadores específicos por site, scraping, monitoramento, sync, cloud, context menu, atalhos ou publicação em loja.
+O transporte foi validado em E2E DEV no Brave com o Auri Desktop 1.10.0. A validação de produção ainda depende dos IDs oficiais atribuídos pelas lojas. Não há suporte a Firefox, adaptadores específicos por site, scraping, monitoramento, sync, cloud, context menu, atalhos ou publicação em loja nesta etapa.
 
 Próxima sequência planejada:
 
-1. host Native Messaging e registro no instalador do Desktop;
-2. bridge do Auri Desktop;
-3. validação real ponta a ponta usando `@auri/protocol`.
+1. publicar nas lojas sem automatizar o upload;
+2. registrar os IDs oficiais no release do Desktop;
+3. executar o E2E de produção e publicar o Setup definitivo.

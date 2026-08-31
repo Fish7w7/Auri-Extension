@@ -1,11 +1,14 @@
 export interface PageSnapshot {
   currentUrl: string;
+  documentBaseUri?: string;
   canonicalHref?: string;
   documentTitle?: string;
   heading?: string;
   metadataChapter?: string;
   ogSiteName?: string;
   ogTitle?: string;
+  ogImage?: string;
+  twitterImage?: string;
 }
 
 /**
@@ -18,6 +21,7 @@ export function collectPageSnapshot(): PageSnapshot {
 
   return {
     currentUrl: window.location.href,
+    documentBaseUri: document.baseURI,
     canonicalHref:
       document.querySelector<HTMLLinkElement>('link[rel~="canonical" i]')?.href || undefined,
     documentTitle: document.title.trim() || undefined,
@@ -28,5 +32,7 @@ export function collectPageSnapshot(): PageSnapshot {
       content('meta[property="article:chapter"]'),
     ogSiteName: content('meta[property="og:site_name"]'),
     ogTitle: content('meta[property="og:title"]'),
+    ogImage: content('meta[property="og:image"]'),
+    twitterImage: content('meta[name="twitter:image"]'),
   };
 }

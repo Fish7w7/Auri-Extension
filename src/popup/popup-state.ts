@@ -1,5 +1,5 @@
 import type {
-  Capability,
+  KnownCapability,
   PageContext,
   WorkResolveResult,
 } from "@auri/protocol";
@@ -14,5 +14,6 @@ export type PopupState =
       status: "ready";
       context: PageContext;
       result: WorkResolveResult;
-      capabilities: Capability[];
+      capabilities: KnownCapability[];
+      coverUrl?: string;
     };

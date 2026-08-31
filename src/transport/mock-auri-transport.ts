@@ -1,11 +1,12 @@
 import {
   CAPABILITIES,
   PROTOCOL_VERSION,
-  type Capability,
+  type KnownCapability,
   type DesktopOpenAddWorkParams,
   type ProgressUpdateParams,
   type SourceAddParams,
   type SystemHelloParams,
+  type SystemHelloResult,
   type WorkOpenParams,
   type WorkResolveParams,
   type WorkResolveResult,
@@ -45,13 +46,13 @@ const matchedWork = {
 export class MockAuriTransport implements AuriTransport {
   constructor(private readonly scenario: MockScenario) {}
 
-  async hello(_params: SystemHelloParams) {
+  async hello(_params: SystemHelloParams): Promise<SystemHelloResult> {
     await pause();
     if (this.scenario === "disconnected") throw new TransportFailure("disconnected");
     if (this.scenario === "incompatible") throw new TransportFailure("incompatible");
     if (this.scenario === "error") throw new TransportFailure("error");
 
-    const capabilities: Capability[] =
+    const capabilities: KnownCapability[] =
       this.scenario === "missing_capability"
         ? CAPABILITIES.filter((capability) => capability !== "progress.update")
         : [...CAPABILITIES];
