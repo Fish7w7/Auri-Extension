@@ -2,7 +2,7 @@
 
 Auri Extension é a extensão oficial do ecossistema Auri para Google Chrome e Microsoft Edge. Ela coleta, somente após uma ação explícita do usuário, o contexto mínimo da página atual e o apresenta ao Auri Desktop por uma abstração de transporte.
 
-Esta é a versão **0.1.0**: uma base local-first, sem conta, servidor, cloud, analytics ou monitoramento permanente da navegação. O Native Messaging e o bridge com o Desktop ainda não fazem parte desta etapa.
+Esta é a versão **0.1.0**: uma base local-first, sem conta, servidor, cloud, analytics ou monitoramento permanente da navegação. O popup já contém o transporte Native Messaging; o host e seu registro no navegador continuam sendo responsabilidade do instalador do Auri Desktop.
 
 ## Estado atual
 
@@ -13,11 +13,11 @@ Popup React
   ├─ activeTab + scripting (leitura sob demanda)
   ├─ extração e validação de PageContext
   └─ AuriTransport
-       └─ MockAuriTransport (0.1.0)
-          Futuro: NativeMessagingTransport → bridge → Auri Desktop
+       ├─ NativeMessagingTransport → host nativo → Auri Desktop
+       └─ MockAuriTransport (desenvolvimento)
 ```
 
-Não há service worker nesta versão. Ele será adicionado somente quando o bridge Native Messaging tiver uma função concreta.
+Não há service worker nesta versão. O popup abre diretamente um Port Native Messaging e o encerra quando é fechado.
 
 ## Stack
 
@@ -66,13 +66,15 @@ A detecção de capítulo exige rótulos como `chapter`, `chap`, `ch`, `capítul
 - `source.add`;
 - `progress.update`.
 
-O popup conhece apenas essa interface. A implementação atual, `MockAuriTransport`, responde de forma previsível; uma futura `NativeMessagingTransport` poderá substituí-la sem reescrever a UI.
+O popup conhece apenas essa interface. O mode `production`, usado por `npm run build`, força `NativeMessagingTransport` com `app.auri.native_host` e ignora qualquer seleção mock. O mode `dev-native`, usado por `npm run build:dev:native`, força `app.auri.native_host.dev`. No servidor de desenvolvimento, `VITE_AURI_TRANSPORT=mock` usa respostas previsíveis, `native` usa o host DEV e o fallback sem variável é mock.
+
+O transporte mantém um Port por popup, cria envelopes e valida respostas pela API pública do Protocol, correlaciona respostas por ID mesmo fora de ordem, limita mensagens pelo tamanho UTF-8 do contrato e aplica timeout de 20 segundos. O primeiro pedido é sempre `system.hello`, e somente as capabilities retornadas por ele habilitam ações.
 
 As ações só aparecem quando a capability correspondente é negociada. A atualização de progresso também exige capítulo numérico com confiança suficiente e estritamente posterior ao progresso atual. Nunca há regressão ou atualização automática.
 
 ## Cenários de mock
 
-Copie `.env.example` para `.env.local` e defina `VITE_AURI_MOCK_SCENARIO`:
+Copie `.env.example` para `.env.local`, mantenha `VITE_AURI_TRANSPORT=mock` e defina `VITE_AURI_MOCK_SCENARIO`:
 
 - `disconnected` (padrão): Desktop indisponível;
 - `matched`: obra e Fonte encontradas;
@@ -83,7 +85,13 @@ Copie `.env.example` para `.env.local` e defina `VITE_AURI_MOCK_SCENARIO`:
 - `error`: falha recuperável;
 - `missing_capability`: obra encontrada sem `progress.update`.
 
-Não existe menu de desenvolvedor no build da extensão.
+Para gerar a extensão unpacked destinada ao E2E com o host DEV, execute:
+
+```bash
+npm run build:dev:native
+```
+
+Esse comando usa o mode `dev-native` e seleciona deterministicamente `app.auri.native_host.dev`. Ele pressupõe que o host `.dev` já esteja instalado e registrado pelo fluxo do Desktop. Não existe menu de desenvolvedor no build da extensão.
 
 ## Estados do popup
 
@@ -96,13 +104,14 @@ O popup tem navegação nativa por teclado, foco visível, regiões com rótulos
 O manifest solicita somente:
 
 - `activeTab`: acesso temporário à aba após ação do usuário;
-- `scripting`: leitura sob demanda do contexto da página.
+- `scripting`: leitura sob demanda do contexto da página;
+- `nativeMessaging`: comunicação local com o host instalado pelo Auri Desktop.
 
-Não há `<all_urls>`. `nativeMessaging` foi deliberadamente omitida até existir um bridge real.
+Não há `storage`, `tabs` nem `<all_urls>`.
 
 ## Privacidade
 
-A extensão não coleta histórico, não observa abas em background, não executa análise permanente, não envia telemetry e não usa analytics. Nenhum contexto de página é persistido. A análise acontece apenas quando o usuário abre a extensão, e o Desktop continuará sendo a fonte de verdade.
+A extensão não coleta histórico, não observa abas em background, não executa análise permanente, não envia telemetry e não usa analytics. Nenhum contexto de página é persistido. A análise e a conexão local acontecem apenas quando o usuário abre a extensão, e o Desktop continua sendo a fonte de verdade.
 
 ## Desenvolvimento
 
@@ -112,6 +121,8 @@ Requisito: Node.js 20+. O `@auri/protocol` é obtido automaticamente da tag GitH
 npm install
 npm run dev
 ```
+
+O servidor de desenvolvimento usa mock por padrão. `npm run build` é sempre a build oficial de produção e seleciona obrigatoriamente `app.auri.native_host`, mesmo que exista uma variável `VITE_AURI_TRANSPORT` no ambiente.
 
 Validação:
 
@@ -123,7 +134,7 @@ npm run build
 
 ## Carregar a extensão unpacked
 
-Primeiro execute `npm run build`. A pasta `dist/` conterá `manifest.json`, popup, assets e service worker.
+Primeiro execute `npm run build`. A pasta `dist/` conterá `manifest.json`, popup e assets, sem service worker.
 
 Chrome:
 
@@ -145,10 +156,10 @@ O símbolo oficial foi integrado a partir de `Auri/build/auri-icon.png`. Os asse
 
 ## Limitações e roadmap imediato
 
-Ainda não funcionam comunicação real, alteração da Biblioteca ou abertura real do Desktop. Também não há suporte a Firefox, adaptadores específicos por site, scraping, monitoramento, sync, cloud, context menu, atalhos ou publicação em loja.
+O transporte da extensão está implementado, mas a conexão real ponta a ponta ainda depende da instalação do host e do registro feita pelo Auri Desktop; ela não é validável apenas neste repositório. Também não há suporte a Firefox, adaptadores específicos por site, scraping, monitoramento, sync, cloud, context menu, atalhos ou publicação em loja.
 
 Próxima sequência planejada:
 
-1. Native Messaging;
+1. host Native Messaging e registro no instalador do Desktop;
 2. bridge do Auri Desktop;
-3. integração real usando `@auri/protocol`.
+3. validação real ponta a ponta usando `@auri/protocol`.

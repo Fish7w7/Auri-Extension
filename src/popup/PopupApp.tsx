@@ -7,12 +7,16 @@ import {
 } from "@auri/protocol";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { EXTENSION_VERSION } from "../config/extension";
 import { readActivePage, type ActivePageResult } from "../extraction/read-active-tab";
-import { TransportFailure, type AuriTransport } from "../transport/auri-transport";
+import {
+  isDesktopUnavailableFailure,
+  isIncompatibleFailure,
+  TransportFailure,
+  type AuriTransport,
+} from "../transport/auri-transport";
 import { createTransport } from "../transport/create-transport";
 import type { PopupState } from "./popup-state";
-
-const EXTENSION_VERSION = "0.1.0";
 
 interface PopupAppProps {
   transport?: AuriTransport;
@@ -36,7 +40,7 @@ export function PopupApp({
 
     try {
       const hello = await transport.hello({
-        client: { kind: "extension", name: "Auri Extension", version: EXTENSION_VERSION },
+        client: { kind: "extension", name: "auri-extension", version: EXTENSION_VERSION },
         supportedProtocolVersions: [PROTOCOL_VERSION],
       });
       if (hello.protocolVersion !== PROTOCOL_VERSION) {
@@ -56,9 +60,9 @@ export function PopupApp({
         capabilities: hello.capabilities,
       });
     } catch (error) {
-      if (error instanceof TransportFailure && error.kind === "disconnected") {
+      if (isDesktopUnavailableFailure(error)) {
         setState({ status: "disconnected", context: page.context });
-      } else if (error instanceof TransportFailure && error.kind === "incompatible") {
+      } else if (isIncompatibleFailure(error)) {
         setState({ status: "incompatible", context: page.context });
       } else {
         if (import.meta.env.DEV) console.error("Falha de comunicação com o Auri", error);
@@ -69,6 +73,7 @@ export function PopupApp({
 
   useEffect(() => {
     void load();
+    return () => transport.close();
   }, [load]);
 
   return <PopupView state={state} transport={transport} onRetry={load} />;
@@ -141,7 +146,11 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
       setFeedback(success);
     } catch (error) {
       if (import.meta.env.DEV) console.error("Ação do Auri falhou", error);
-      setFeedback("Não foi possível concluir. Tente novamente.");
+      setFeedback(
+        error instanceof TransportFailure && error.protocolError?.code === "CONFLICT"
+          ? "O Auri precisa que essa alteração seja confirmada no aplicativo."
+          : "Não foi possível concluir. Tente novamente.",
+      );
     } finally {
       setPending(undefined);
     }

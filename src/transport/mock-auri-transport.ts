@@ -122,6 +122,8 @@ export class MockAuriTransport implements AuriTransport {
     await pause();
     return { updated: true as const };
   }
+
+  close() {}
 }
 
 export function getMockScenario(value: string | undefined): MockScenario {

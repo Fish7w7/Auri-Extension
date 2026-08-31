@@ -1,9 +1,17 @@
-import { CAPABILITIES, type Capability, type PageContext, type WorkResolveResult } from "@auri/protocol";
-import { render, screen } from "@testing-library/react";
+import {
+  CAPABILITIES,
+  type Capability,
+  type PageContext,
+  type ProgressUpdateParams,
+  type SystemHelloParams,
+  type WorkResolveResult,
+} from "@auri/protocol";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { PopupView } from "../src/popup/PopupApp";
+import { PopupApp, PopupView } from "../src/popup/PopupApp";
 import type { PopupState } from "../src/popup/popup-state";
+import { TransportFailure } from "../src/transport/auri-transport";
 import { MockAuriTransport } from "../src/transport/mock-auri-transport";
 
 const transport = new MockAuriTransport("matched");
@@ -108,6 +116,56 @@ describe("PopupView", () => {
   it("mostra erro recuperável", () => {
     renderState({ status: "error", context });
     expect(screen.getByText("Não foi possível consultar o Auri agora.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeInTheDocument();
+  });
+
+  it("orienta confirmação no Desktop ao receber CONFLICT", async () => {
+    class ConflictTransport extends MockAuriTransport {
+      override updateProgress(
+        _params: ProgressUpdateParams,
+      ): ReturnType<MockAuriTransport["updateProgress"]> {
+        return Promise.reject(new TransportFailure("protocol", {
+          code: "CONFLICT",
+          message: "Confirmação necessária",
+        }));
+      }
+    }
+    render(<PopupView
+      state={ready(matched)}
+      transport={new ConflictTransport("matched")}
+      onRetry={vi.fn()}
+    />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Atualizar para 327" }));
+
+    expect(await screen.findByText(
+      "O Auri precisa que essa alteração seja confirmada no aplicativo.",
+    )).toBeInTheDocument();
+  });
+});
+
+describe("PopupApp com falhas do transporte nativo", () => {
+  it.each([
+    ["host ausente", new TransportFailure("host_not_found")],
+    ["Port desconectado", new TransportFailure("disconnected")],
+    ["Auri iniciando", new TransportFailure("protocol", {
+      code: "AURI_NOT_READY",
+      message: "Auri ainda não está pronto",
+    })],
+  ])("mostra estado recuperável quando %s", async (_label, failure) => {
+    class UnavailableTransport extends MockAuriTransport {
+      override hello(
+        _params: SystemHelloParams,
+      ): ReturnType<MockAuriTransport["hello"]> {
+        return Promise.reject(failure);
+      }
+    }
+    render(<PopupApp
+      transport={new UnavailableTransport("matched")}
+      readPage={async () => ({ status: "ready", context })}
+    />);
+
+    expect(await screen.findByText("O Auri Desktop não está disponível.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeInTheDocument();
   });
 });
