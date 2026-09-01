@@ -6,7 +6,7 @@ import {
 } from "@auri/protocol";
 import { describe, expect, it } from "vitest";
 
-import { MockAuriTransport } from "../src/transport/mock-auri-transport";
+import { MockAuriTransport } from "../../src/transport/mock-auri-transport";
 
 describe("integração com @auri/protocol", () => {
   it("negocia a versão pública e produz PageContext aceito pelo pacote", async () => {

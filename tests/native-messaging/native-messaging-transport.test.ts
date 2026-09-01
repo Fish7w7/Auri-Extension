@@ -8,16 +8,16 @@ import {
 } from "@auri/protocol";
 import { describe, expect, it, vi } from "vitest";
 
-import { NATIVE_HOST } from "../src/config/native-hosts";
-import { TransportFailure } from "../src/transport/auri-transport";
-import { selectTransport } from "../src/transport/create-transport";
-import { NativeMessagingTransport } from "../src/transport/native-messaging-transport";
+import { NATIVE_HOST } from "../../src/config/native-hosts";
+import { TransportFailure } from "../../src/transport/auri-transport";
+import { selectTransport } from "../../src/transport/create-transport";
+import { NativeMessagingTransport } from "../../src/transport/native-messaging-transport";
 import type {
   NativeDisconnectListener,
   NativeMessageListener,
   NativeMessagingPort,
   NativeMessagingRuntime,
-} from "../src/transport/native-messaging-runtime";
+} from "../../src/transport/native-messaging-runtime";
 
 class FakePort implements NativeMessagingPort {
   readonly posted: unknown[] = [];

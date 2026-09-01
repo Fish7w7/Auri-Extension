@@ -10,7 +10,7 @@ import {
   createZipBuffer,
   listZipEntries,
   validateProductionDist,
-} from "../scripts/package-store.mjs";
+} from "../../scripts/release/package-store.mjs";
 
 const temporaryDirectories = [];
 

@@ -1,14 +1,16 @@
-# Dependências
-node_modules/
+# Dependencies
+/node_modules/
 
-# Build e cobertura
-dist/
-release/
-coverage/
-.vite/
+# Build outputs
+/dist/
+/coverage/
+/.vite/
 *.tsbuildinfo
 
-# Variáveis locais
+# Release artifacts
+/release/
+
+# Environment
 .env
 .env.*
 !.env.example
@@ -18,10 +20,10 @@ coverage/
 *.log
 npm-debug.log*
 
-# Validações temporárias locais
-.clean-validation-*/
+# Temporary validation directories
+/.clean-validation-*/
 
-# Sistema operacional e editores
+# IDE / OS
 .DS_Store
 Thumbs.db
-.idea/
+/.idea/

@@ -191,7 +191,7 @@ export async function createStorePackage(projectRoot) {
 
 async function main() {
   const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-  const projectRoot = resolve(scriptDirectory, "..");
+  const projectRoot = resolve(scriptDirectory, "..", "..");
   const result = await createStorePackage(projectRoot);
   const distBytes = result.files.reduce((total, file) => total + file.data.length, 0);
   console.log(`Pacote criado: ${result.outputPath}`);

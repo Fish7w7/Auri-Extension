@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev:native": "vite build --mode dev-native",
-    "package:store": "node scripts/package-store.mjs",
+    "package:store": "node scripts/release/package-store.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

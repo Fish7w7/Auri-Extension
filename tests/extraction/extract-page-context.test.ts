@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { extractPageContext } from "../src/extraction/extract-page-context";
-import { collectPageSnapshot, type PageSnapshot } from "../src/extraction/page-snapshot";
+import { extractPageContext } from "../../src/extraction/extract-page-context";
+import { collectPageSnapshot, type PageSnapshot } from "../../src/extraction/page-snapshot";
 
 const snapshot = (values: Partial<PageSnapshot> = {}): PageSnapshot => ({
   currentUrl: "https://reader.example/series/nano-machine",
