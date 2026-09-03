@@ -1,0 +1,212 @@
+{
+  "extensionName": {
+    "message": "Auri"
+  },
+  "extensionDescription": {
+    "message": "Conecte páginas de leitura no navegador à sua biblioteca local do Auri Desktop."
+  },
+  "actionTitle": {
+    "message": "Abrir Auri"
+  },
+  "documentLanguage": {
+    "message": "pt-BR"
+  },
+  "versionLabel": {
+    "message": "v$VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.1.1"
+      }
+    }
+  },
+  "chapterLabel": {
+    "message": "Cap. $CHAPTER$",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "327"
+      }
+    }
+  },
+  "chapterUnknown": {
+    "message": "Não informado"
+  },
+  "pageContextLabel": {
+    "message": "Página analisada"
+  },
+  "currentPage": {
+    "message": "Página atual"
+  },
+  "wait": {
+    "message": "Aguarde…"
+  },
+  "actionConflict": {
+    "message": "O Auri precisa que essa alteração seja confirmada no aplicativo."
+  },
+  "actionFailed": {
+    "message": "Não foi possível concluir. Tente novamente."
+  },
+  "statusLoading": {
+    "message": "Analisando página"
+  },
+  "loadingTitle": {
+    "message": "Analisando esta página…"
+  },
+  "loadingDescription": {
+    "message": "Coletando apenas o contexto necessário."
+  },
+  "statusUnsupported": {
+    "message": "Página não suportada"
+  },
+  "unsupportedEyebrow": {
+    "message": "Página indisponível"
+  },
+  "unsupportedTitle": {
+    "message": "Esta página não pode ser analisada pelo Auri."
+  },
+  "unsupportedDescription": {
+    "message": "Abra uma página HTTP ou HTTPS e tente novamente."
+  },
+  "statusDisconnected": {
+    "message": "Auri desconectado"
+  },
+  "disconnectedEyebrow": {
+    "message": "Desconectado"
+  },
+  "disconnectedTitle": {
+    "message": "O Auri Desktop não está disponível."
+  },
+  "disconnectedDescription": {
+    "message": "Abra o Auri no computador para usar esta extensão."
+  },
+  "retry": {
+    "message": "Tentar novamente"
+  },
+  "statusIncompatible": {
+    "message": "Protocolo incompatível"
+  },
+  "incompatibleEyebrow": {
+    "message": "Atualização necessária"
+  },
+  "incompatibleTitle": {
+    "message": "Esta versão da extensão não é compatível com a versão atual do Auri."
+  },
+  "incompatibleDescription": {
+    "message": "Atualize o Auri Desktop ou a extensão e tente novamente."
+  },
+  "statusError": {
+    "message": "Falha temporária"
+  },
+  "errorEyebrow": {
+    "message": "Algo não saiu como esperado"
+  },
+  "errorTitle": {
+    "message": "Não foi possível consultar o Auri agora."
+  },
+  "errorDescription": {
+    "message": "O problema pode ser temporário. Tente novamente."
+  },
+  "statusConnected": {
+    "message": "Auri conectado"
+  },
+  "notFoundEyebrow": {
+    "message": "Não encontrada"
+  },
+  "notFoundTitle": {
+    "message": "Esta obra ainda não está na sua Biblioteca."
+  },
+  "detectedChapter": {
+    "message": "Capítulo detectado: $CHAPTER$",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "Ch. 327"
+      }
+    }
+  },
+  "addWorkSuccess": {
+    "message": "Auri aberto para adicionar a obra."
+  },
+  "addWork": {
+    "message": "Adicionar ao Auri"
+  },
+  "ambiguousEyebrow": {
+    "message": "Escolha necessária"
+  },
+  "ambiguousTitle": {
+    "message": "Encontramos mais de uma obra possível."
+  },
+  "ambiguousDescription": {
+    "message": "Escolha explicitamente qual deseja abrir."
+  },
+  "currentChapter": {
+    "message": "Atual: $CHAPTER$",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "Ch. 326"
+      }
+    }
+  },
+  "openWorkNamedSuccess": {
+    "message": "$WORK_TITLE$ aberto no Auri.",
+    "placeholders": {
+      "work_title": {
+        "content": "$1",
+        "example": "Nano Machine"
+      }
+    }
+  },
+  "open": {
+    "message": "Abrir"
+  },
+  "inLibrary": {
+    "message": "Na Biblioteca"
+  },
+  "sourceRecognized": {
+    "message": "Fonte reconhecida"
+  },
+  "progressLabel": {
+    "message": "Progresso"
+  },
+  "progressCurrent": {
+    "message": "Atual"
+  },
+  "progressPage": {
+    "message": "Página"
+  },
+  "previousChapterHint": {
+    "message": "Esta página está antes do progresso atual."
+  },
+  "updateProgressSuccess": {
+    "message": "Progresso atualizado para $CHAPTER$.",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "327"
+      }
+    }
+  },
+  "updateProgress": {
+    "message": "Atualizar para $CHAPTER$",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "327"
+      }
+    }
+  },
+  "openWorkSuccess": {
+    "message": "Obra aberta no Auri."
+  },
+  "openWork": {
+    "message": "Abrir no Auri"
+  },
+  "addSourceSuccess": {
+    "message": "Fonte adicionada à obra."
+  },
+  "addSource": {
+    "message": "Adicionar esta fonte"
+  }
+}

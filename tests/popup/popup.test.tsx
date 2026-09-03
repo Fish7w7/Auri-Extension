@@ -11,12 +11,15 @@ import {
   type WorkResolveResult,
 } from "@auri/protocol";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PopupApp, PopupView } from "../../src/popup/PopupApp";
 import type { PopupState } from "../../src/popup/popup-state";
 import { TransportFailure } from "../../src/transport/auri-transport";
 import { MockAuriTransport } from "../../src/transport/mock-auri-transport";
+import { installChromeI18nMock } from "../helpers/chrome-i18n";
+
+beforeEach(() => { installChromeI18nMock("pt_BR"); });
 
 const transport = new MockAuriTransport("matched");
 const context: PageContext = {

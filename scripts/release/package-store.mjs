@@ -9,7 +9,10 @@ import {
 import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-export const STORE_PACKAGE_NAME = "auri-extension-0.1.0-chromium.zip";
+const packageMetadata = JSON.parse(await readFile(
+  resolve(dirname(fileURLToPath(import.meta.url)), "../../package.json"), "utf8",
+));
+export const STORE_PACKAGE_NAME = `auri-extension-${packageMetadata.version}-chromium.zip`;
 export const PRODUCTION_HOST = "app.auri.native_host";
 export const DEVELOPMENT_HOST = "app.auri.native_host.dev";
 
@@ -69,8 +72,21 @@ export async function validateProductionDist(distDirectory) {
   const manifest = JSON.parse(manifestEntry.data.toString("utf8"));
 
   assert(manifest.manifest_version === 3, "O manifest precisa usar Manifest V3.");
-  assert(manifest.name === "Auri", "O nome de produção precisa ser Auri.");
-  assert(manifest.version === "0.1.0", "A versão da extensão precisa ser 0.1.0.");
+  assert(manifest.name === "__MSG_extensionName__", "O nome de produção precisa ser localizado.");
+  assert(manifest.version === packageMetadata.version, "A versão da extensão precisa corresponder ao package.json.");
+  assert(manifest.default_locale === "en", "O idioma padrão precisa ser en.");
+  assert(manifest.description === "__MSG_extensionDescription__", "A descrição precisa ser localizada.");
+  assert(manifest.action?.default_title === "__MSG_actionTitle__", "O título da action precisa ser localizado.");
+  for (const locale of ["en", "pt_BR"]) {
+    const localePath = `_locales/${locale}/messages.json`;
+    const localeEntry = files.find(({ name }) => name === localePath);
+    assert(localeEntry, `Locale ausente: ${localePath}`);
+    const messages = JSON.parse(localeEntry.data.toString("utf8"));
+    assert(messages.extensionName?.message === "Auri", `Nome inválido na locale ${locale}.`);
+    for (const key of ["extensionDescription", "actionTitle"]) {
+      assert(messages[key]?.message?.trim(), `Mensagem ausente em ${locale}: ${key}`);
+    }
+  }
   assert(
     JSON.stringify([...manifest.permissions].sort()) === JSON.stringify(EXPECTED_PERMISSIONS),
     "As permissões do manifest não correspondem ao conjunto mínimo aprovado.",

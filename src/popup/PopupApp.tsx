@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { EXTENSION_VERSION } from "../config/extension";
 import { readActivePage, type ActivePageResult } from "../extraction/read-active-tab";
+import { t } from "../i18n";
 import {
   isDesktopUnavailableFailure,
   isIncompatibleFailure,
@@ -95,12 +96,12 @@ const hasCapability = (
   capabilities.includes(capability);
 
 const formatChapter = (chapter: { value: string } | null | undefined) =>
-  chapter ? `Cap. ${chapter.value}` : "Não informado";
+  chapter ? t("chapterLabel", chapter.value) : t("chapterUnknown");
 
 function PageHeading({ context }: { context: PageContext }) {
   return (
-    <section className="page-context" aria-label="Página analisada">
-      <h1>{context.title ?? "Página atual"}</h1>
+    <section className="page-context" aria-label={t("pageContextLabel")}>
+      <h1>{context.title ?? t("currentPage")}</h1>
       <p>{context.siteName ?? context.domain}</p>
     </section>
   );
@@ -112,9 +113,9 @@ function Shell({ children, connection }: { children: React.ReactNode; connection
       <header className="brand-header">
         <span className="brand-lockup">
           <img src="/icons/auri-32.png" width="32" height="32" alt="" />
-          <span className="brand-name">Auri</span>
+          <span className="brand-name">{t("extensionName")}</span>
         </span>
-        <span className="version">v{EXTENSION_VERSION}</span>
+        <span className="version">{t("versionLabel", EXTENSION_VERSION)}</span>
       </header>
       <div className="content">{children}</div>
       <footer><span className="status-dot" aria-hidden="true" />{connection}</footer>
@@ -135,7 +136,7 @@ function ActionButton({
 }) {
   return (
     <button className={className} type="button" disabled={busy} onClick={() => void action()}>
-      {busy ? "Aguarde…" : children}
+      {busy ? t("wait") : children}
     </button>
   );
 }
@@ -154,8 +155,8 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
       if (import.meta.env.DEV) console.error("Ação do Auri falhou", error);
       setFeedback(
         error instanceof TransportFailure && error.protocolError?.code === "CONFLICT"
-          ? "O Auri precisa que essa alteração seja confirmada no aplicativo."
-          : "Não foi possível concluir. Tente novamente.",
+          ? t("actionConflict")
+          : t("actionFailed"),
       );
     } finally {
       setPending(undefined);
@@ -164,11 +165,11 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
 
   if (state.status === "loading") {
     return (
-      <Shell connection="Analisando página">
+      <Shell connection={t("statusLoading")}>
         <section className="loading" aria-live="polite">
           <span className="loading-line" aria-hidden="true" />
-          <h1>Analisando esta página…</h1>
-          <p>Coletando apenas o contexto necessário.</p>
+          <h1>{t("loadingTitle")}</h1>
+          <p>{t("loadingDescription")}</p>
         </section>
       </Shell>
     );
@@ -176,11 +177,11 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
 
   if (state.status === "unsupported") {
     return (
-      <Shell connection="Página não suportada">
+      <Shell connection={t("statusUnsupported")}>
         <section className="message-state">
-          <p className="eyebrow">Página indisponível</p>
-          <h1>Esta página não pode ser analisada pelo Auri.</h1>
-          <p>Abra uma página HTTP ou HTTPS e tente novamente.</p>
+          <p className="eyebrow">{t("unsupportedEyebrow")}</p>
+          <h1>{t("unsupportedTitle")}</h1>
+          <p>{t("unsupportedDescription")}</p>
         </section>
       </Shell>
     );
@@ -188,14 +189,14 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
 
   if (state.status === "disconnected") {
     return (
-      <Shell connection="Auri desconectado">
+      <Shell connection={t("statusDisconnected")}>
         <PageHeading context={state.context} />
         <section className="message-state separated">
-          <p className="eyebrow">Desconectado</p>
-          <h2>O Auri Desktop não está disponível.</h2>
-          <p>Abra o Auri no computador para usar esta extensão.</p>
+          <p className="eyebrow">{t("disconnectedEyebrow")}</p>
+          <h2>{t("disconnectedTitle")}</h2>
+          <p>{t("disconnectedDescription")}</p>
           <button className="button-primary" type="button" onClick={() => void onRetry()}>
-            Tentar novamente
+            {t("retry")}
           </button>
         </section>
       </Shell>
@@ -204,14 +205,14 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
 
   if (state.status === "incompatible") {
     return (
-      <Shell connection="Protocolo incompatível">
+      <Shell connection={t("statusIncompatible")}>
         <PageHeading context={state.context} />
         <section className="message-state separated">
-          <p className="eyebrow">Atualização necessária</p>
-          <h2>Esta versão da extensão não é compatível com a versão atual do Auri.</h2>
-          <p>Atualize o Auri Desktop ou a extensão e tente novamente.</p>
+          <p className="eyebrow">{t("incompatibleEyebrow")}</p>
+          <h2>{t("incompatibleTitle")}</h2>
+          <p>{t("incompatibleDescription")}</p>
           <button className="button-primary" type="button" onClick={() => void onRetry()}>
-            Tentar novamente
+            {t("retry")}
           </button>
         </section>
       </Shell>
@@ -220,14 +221,14 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
 
   if (state.status === "error") {
     return (
-      <Shell connection="Falha temporária">
+      <Shell connection={t("statusError")}>
         {state.context && <PageHeading context={state.context} />}
         <section className="message-state separated">
-          <p className="eyebrow">Algo não saiu como esperado</p>
-          <h2>Não foi possível consultar o Auri agora.</h2>
-          <p>O problema pode ser temporário. Tente novamente.</p>
+          <p className="eyebrow">{t("errorEyebrow")}</p>
+          <h2>{t("errorTitle")}</h2>
+          <p>{t("errorDescription")}</p>
           <button className="button-primary" type="button" onClick={() => void onRetry()}>
-            Tentar novamente
+            {t("retry")}
           </button>
         </section>
       </Shell>
@@ -251,18 +252,18 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
     const canAdd = hasCapability(capabilities, "desktop.openAddWork");
 
     return (
-      <Shell connection="Auri conectado">
+      <Shell connection={t("statusConnected")}>
         <PageHeading context={context} />
         <section className="message-state separated">
-          <p className="eyebrow">Não encontrada</p>
-          <h2>Esta obra ainda não está na sua Biblioteca.</h2>
-          {context.detectedChapter && <p>Capítulo detectado: {formatChapter(context.detectedChapter)}</p>}
+          <p className="eyebrow">{t("notFoundEyebrow")}</p>
+          <h2>{t("notFoundTitle")}</h2>
+          {context.detectedChapter && <p>{t("detectedChapter", formatChapter(context.detectedChapter))}</p>}
           {canAdd && (
             <ActionButton
               busy={pending === "add-work"}
-              action={() => runAction("add-work", () => transport.openAddWork(draft), "Auri aberto para adicionar a obra.")}
+              action={() => runAction("add-work", () => transport.openAddWork(draft), t("addWorkSuccess"))}
             >
-              Adicionar ao Auri
+              {t("addWork")}
             </ActionButton>
           )}
           {actionFeedback}
@@ -273,23 +274,23 @@ export function PopupView({ state, transport, onRetry }: PopupViewProps) {
 
   if (result.status === "ambiguous") {
     return (
-      <Shell connection="Auri conectado">
+      <Shell connection={t("statusConnected")}>
         <PageHeading context={context} />
         <section className="message-state separated">
-          <p className="eyebrow">Escolha necessária</p>
-          <h2>Encontramos mais de uma obra possível.</h2>
-          <p>Escolha explicitamente qual deseja abrir.</p>
+          <p className="eyebrow">{t("ambiguousEyebrow")}</p>
+          <h2>{t("ambiguousTitle")}</h2>
+          <p>{t("ambiguousDescription")}</p>
           <ul className="candidate-list">
             {result.candidates.map(({ work }) => (
               <li key={work.id}>
-                <span><strong>{work.title}</strong><small>Atual: {formatChapter(work.currentChapter)}</small></span>
+                <span><strong>{work.title}</strong><small>{t("currentChapter", formatChapter(work.currentChapter))}</small></span>
                 {hasCapability(capabilities, "work.open") && (
                   <ActionButton
                     className="button-quiet"
                     busy={pending === work.id}
-                    action={() => runAction(work.id, () => transport.openWork({ workId: work.id }), `${work.title} aberto no Auri.`)}
+                    action={() => runAction(work.id, () => transport.openWork({ workId: work.id }), t("openWorkNamedSuccess", work.title))}
                   >
-                    Abrir
+                    {t("open")}
                   </ActionButton>
                 )}
               </li>
@@ -342,21 +343,21 @@ function MatchedView({
   const canUpdate = Boolean(updateChapter && hasCapability(capabilities, "progress.update"));
 
   return (
-    <Shell connection="Auri conectado">
+    <Shell connection={t("statusConnected")}>
       <PageHeading context={{ ...context, title: result.work.title }} />
       <section className="matched-status separated">
-        <p className="eyebrow">Na Biblioteca</p>
+        <p className="eyebrow">{t("inLibrary")}</p>
         {result.source && (
-          <p className="source-line"><span>Fonte reconhecida</span><strong>{result.source.name ?? result.source.domain}</strong></p>
+          <p className="source-line"><span>{t("sourceRecognized")}</span><strong>{result.source.name ?? result.source.domain}</strong></p>
         )}
-        <div className="progress-grid" aria-label="Progresso">
-          <div><span>Atual</span><strong>{formatChapter(current)}</strong></div>
-          <div><span>Página</span><strong>{formatChapter(detected)}</strong></div>
+        <div className="progress-grid" aria-label={t("progressLabel")}>
+          <div><span>{t("progressCurrent")}</span><strong>{formatChapter(current)}</strong></div>
+          <div><span>{t("progressPage")}</span><strong>{formatChapter(detected)}</strong></div>
         </div>
         {detected?.numericValue !== undefined &&
           current?.numericValue !== undefined &&
           detected.numericValue < current.numericValue && (
-          <p className="hint">Esta página está antes do progresso atual.</p>
+          <p className="hint">{t("previousChapterHint")}</p>
         )}
         <div className="actions">
           {canUpdate && updateChapter && (
@@ -370,19 +371,19 @@ function MatchedView({
                   ...(result.source ? { sourceId: result.source.id } : {}),
                   pageUrl: context.url,
                 }),
-                `Progresso atualizado para ${updateChapter.value}.`,
+                t("updateProgressSuccess", updateChapter.value),
               )}
             >
-              Atualizar para {updateChapter.value}
+              {t("updateProgress", updateChapter.value)}
             </ActionButton>
           )}
           {hasCapability(capabilities, "work.open") && (
             <ActionButton
               className={canUpdate ? "button-secondary" : "button-primary"}
               busy={pending === "open"}
-              action={() => runAction("open", () => transport.openWork({ workId: result.work.id }), "Obra aberta no Auri.")}
+              action={() => runAction("open", () => transport.openWork({ workId: result.work.id }), t("openWorkSuccess"))}
             >
-              Abrir no Auri
+              {t("openWork")}
             </ActionButton>
           )}
           {!result.source && hasCapability(capabilities, "source.add") && (
@@ -392,10 +393,10 @@ function MatchedView({
               action={() => runAction(
                 "source",
                 () => transport.addSource({ workId: result.work.id, url: context.url, name: context.siteName }),
-                "Fonte adicionada à obra.",
+                t("addSourceSuccess"),
               )}
             >
-              Adicionar esta fonte
+              {t("addSource")}
             </ActionButton>
           )}
         </div>

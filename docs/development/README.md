@@ -63,6 +63,19 @@ Gere primeiro o build desejado. A pasta `dist/` conterá o Manifest V3, o popup 
 3. Escolha **Load unpacked**.
 4. Selecione a pasta `Auri-Extension/dist/`.
 
+## Internacionalização
+
+A versão 0.1.1 usa a API nativa [chrome.i18n](https://developer.chrome.com/docs/extensions/reference/api/i18n), sem biblioteca de tradução. O navegador escolhe o idioma, com inglês como padrão e fallback (`default_locale: en`):
+
+- English: [public/_locales/en/messages.json](../../public/_locales/en/messages.json);
+- Português (Brasil): [public/_locales/pt_BR/messages.json](../../public/_locales/pt_BR/messages.json).
+
+Para adicionar uma mensagem, crie a mesma chave nos dois arquivos e use `t("chave")` no popup. O helper em [src/i18n.ts](../../src/i18n.ts) apenas encaminha a chamada para `chrome.i18n.getMessage`; seus tipos vêm do catálogo inglês.
+
+Frases com valores dinâmicos usam placeholders nomeados no JSON (por exemplo, `$CHAPTER$` com `content: "$1"`) e `t("updateProgress", chapter.value)`. Não traduza títulos, sites ou dados recebidos da página ou do Desktop. Mantenha as mesmas chaves, placeholders e posições nos dois idiomas; os testes focados em `tests/i18n/` verificam essa paridade.
+
+O build copia os dois catálogos para `dist/_locales/`. A listagem PT-BR no Partner Center será preenchida manualmente após o envio do novo pacote; os catálogos não substituem os textos da loja.
+
 ## Validação
 
 ```bash
