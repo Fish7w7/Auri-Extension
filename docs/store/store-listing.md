@@ -1,4 +1,4 @@
-# Metadata para as lojas — Auri 0.1.0
+# Metadata para as lojas — Auri 0.2.0
 
 ## Nome
 
@@ -16,7 +16,7 @@ Ao abrir a extensão, ela identifica de forma conservadora o contexto da página
 
 A extensão requer o Auri Desktop instalado no mesmo computador. A comunicação acontece localmente por Native Messaging, sem servidor Auri, conta, cloud, analytics ou monitoramento permanente da navegação.
 
-Compatível com Google Chrome, Microsoft Edge e navegadores Chromium compatíveis, incluindo Brave. A disponibilidade oficial depende da publicação em cada loja.
+O Microsoft Edge recebe a extensão pelo Edge Add-ons. Chrome e Brave usam a variante Embedded instalada manualmente pelo fluxo guiado do Auri Desktop 1.12.0.
 
 ## Finalidade principal
 
@@ -46,8 +46,8 @@ Requer Auri Desktop compatível instalado e com o Native Host oficial configurad
 
 ## Navegadores
 
-- Google Chrome;
-- Microsoft Edge;
-- Brave, por compatibilidade Chromium.
+- Microsoft Edge, pelo Edge Add-ons;
+- Google Chrome, pela variante Embedded;
+- Brave, pela variante Embedded e compatibilidade Chromium.
 
-Um único pacote Chromium é usado para Chrome, Edge e Brave. Não há IDs de loja registrados neste documento.
+O pacote Store não contém a chave usada para estabilizar a identidade da variante Embedded.

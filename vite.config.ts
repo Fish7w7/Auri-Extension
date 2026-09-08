@@ -1,33 +1,43 @@
+import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import react from "@vitejs/plugin-react";
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 
-import { NATIVE_HOST } from "./src/config/native-hosts";
+import {
+  manifestForVariant,
+  resolveBuildSettings,
+  type ProductionVariant,
+} from "./build/extension-variants";
 
 const projectRoot = dirname(fileURLToPath(import.meta.url));
 
+function manifestVariantPlugin(outDir: string, variant: ProductionVariant): Plugin {
+  return {
+    name: "auri-manifest-variant",
+    apply: "build",
+    async closeBundle() {
+      const manifestPath = resolve(projectRoot, outDir, "manifest.json");
+      const source = JSON.parse(await readFile(manifestPath, "utf8")) as Record<string, unknown>;
+      const manifest = manifestForVariant(source, variant);
+      await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const environment = loadEnv(mode, projectRoot, "");
-  const transport =
-    mode === "production" ||
-    mode === "dev-native" ||
-    (mode === "development" && environment.VITE_AURI_TRANSPORT === "native")
-      ? "native"
-      : "mock";
-  const hostName = mode === "production"
-    ? NATIVE_HOST.production
-    : NATIVE_HOST.development;
+  const settings = resolveBuildSettings(mode, environment.VITE_AURI_TRANSPORT);
 
   return {
-    plugins: [react()],
+    plugins: [react(), manifestVariantPlugin(settings.outDir, settings.productionVariant)],
     define: {
-      __AURI_BUILD_TRANSPORT__: JSON.stringify(transport),
-      __AURI_NATIVE_HOST__: JSON.stringify(hostName),
+      __AURI_BUILD_TRANSPORT__: JSON.stringify(settings.transport),
+      __AURI_NATIVE_HOST__: JSON.stringify(settings.hostName),
     },
     build: {
-      outDir: "dist",
+      outDir: settings.outDir,
       emptyOutDir: true,
       sourcemap: false,
       rollupOptions: {

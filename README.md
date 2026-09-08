@@ -60,9 +60,9 @@ A extensão não solicita `storage` nem `<all_urls>` e não utiliza service work
 
 ## Instalação
 
-A versão **0.1.0** foi enviada ao **Microsoft Edge Add-ons** e está em revisão. O link público será incluído aqui somente depois da aprovação e publicação pela Microsoft.
+A extensão continua distribuída oficialmente pelo **Microsoft Edge Add-ons** para o Edge.
 
-Ainda não há uma publicação oficial anunciada para a Chrome Web Store. O Brave pode executar extensões compatíveis com Chromium, mas não existe uma publicação específica para ele neste momento.
+Para Chrome e Brave, a versão 0.2.0 prepara uma variante oficial Embedded com ID estável, destinada à instalação manual guiada pelo Auri Desktop 1.12.0. Essa variante não altera a identidade da extensão publicada no Edge.
 
 ## Desenvolvimento
 
@@ -81,7 +81,7 @@ npm run typecheck
 npm run build
 ```
 
-`npm run build` sempre gera a extensão de produção. Para Native Messaging DEV, cenários de mock, build `dev-native` e carregamento unpacked, consulte o [guia de desenvolvimento](docs/development/README.md).
+`npm run build` sempre gera a extensão Store de produção. Para a variante Embedded, Native Messaging DEV, cenários de mock e carregamento unpacked, consulte o [guia de desenvolvimento](docs/development/README.md).
 
 ## Documentação
 
@@ -91,4 +91,4 @@ A [Documentação da Auri Extension](docs/README.md) reúne:
 - desenvolvimento, mocks e instalação unpacked;
 - empacotamento e distribuição em lojas.
 
-Consulte também a [Política de Privacidade](PRIVACY.md) e a [documentação de distribuição](docs/store/release-checklist.md).
+Consulte também a [Política de Privacidade](PRIVACY.md) e a [documentação de distribuição](docs/store/distribution.md).

@@ -1,4 +1,5 @@
 import { deflateRawSync } from "node:zlib";
+import { createHash, createPublicKey } from "node:crypto";
 import {
   mkdir,
   readFile,
@@ -8,13 +9,21 @@ import {
 } from "node:fs/promises";
 import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { PROTOCOL_VERSION } from "@auri/protocol";
 
+const projectDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const packageMetadata = JSON.parse(await readFile(
-  resolve(dirname(fileURLToPath(import.meta.url)), "../../package.json"), "utf8",
+  resolve(projectDirectory, "package.json"), "utf8",
+));
+const embeddedIdentity = JSON.parse(await readFile(
+  resolve(projectDirectory, "config/embedded-extension.json"), "utf8",
 ));
 export const STORE_PACKAGE_NAME = `auri-extension-${packageMetadata.version}-chromium.zip`;
+export const EMBEDDED_PACKAGE_NAME = `auri-extension-${packageMetadata.version}-embedded.zip`;
+export const EMBEDDED_METADATA_NAME = `auri-extension-${packageMetadata.version}-embedded.json`;
 export const PRODUCTION_HOST = "app.auri.native_host";
 export const DEVELOPMENT_HOST = "app.auri.native_host.dev";
+export const EMBEDDED_PUBLIC_KEY = embeddedIdentity.publicKey;
 
 const REQUIRED_ICONS = [
   "icons/auri-16.png",
@@ -61,7 +70,22 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-export async function validateProductionDist(distDirectory) {
+function embeddedPublicKeyBytes() {
+  const bytes = Buffer.from(EMBEDDED_PUBLIC_KEY, "base64");
+  assert(bytes.toString("base64") === EMBEDDED_PUBLIC_KEY, "Chave pública Embedded inválida.");
+  const key = createPublicKey({ key: bytes, format: "der", type: "spki" });
+  assert(key.asymmetricKeyType === "rsa", "A chave pública Embedded precisa ser RSA.");
+  return bytes;
+}
+
+export function calculateEmbeddedExtensionId() {
+  const hexadecimal = createHash("sha256").update(embeddedPublicKeyBytes()).digest("hex").slice(0, 32);
+  return [...hexadecimal]
+    .map((character) => String.fromCharCode("a".charCodeAt(0) + Number.parseInt(character, 16)))
+    .join("");
+}
+
+export async function validateProductionDist(distDirectory, { variant = "store" } = {}) {
   const distStats = await stat(distDirectory).catch(() => undefined);
   assert(distStats?.isDirectory(), "dist/ não existe; execute npm run build primeiro.");
 
@@ -77,10 +101,28 @@ export async function validateProductionDist(distDirectory) {
   assert(manifest.default_locale === "en", "O idioma padrão precisa ser en.");
   assert(manifest.description === "__MSG_extensionDescription__", "A descrição precisa ser localizada.");
   assert(manifest.action?.default_title === "__MSG_actionTitle__", "O título da action precisa ser localizado.");
+  if (variant === "embedded") {
+    assert(manifest.key === EMBEDDED_PUBLIC_KEY, "A variante Embedded precisa conter a chave pública oficial.");
+  } else {
+    assert(!("key" in manifest), "O pacote Store não pode conter a chave Embedded.");
+  }
+  const localeFiles = names
+    .filter((name) => /^_locales\/[^/]+\/messages\.json$/u.test(name))
+    .sort();
+  for (const locale of ["en", "pt_BR"]) {
+    const localePath = `_locales/${locale}/messages.json`;
+    assert(names.includes(localePath), `Locale ausente: ${localePath}`);
+  }
+  assert(
+    JSON.stringify(localeFiles) === JSON.stringify([
+      "_locales/en/messages.json",
+      "_locales/pt_BR/messages.json",
+    ]),
+    "O pacote precisa conter somente as locales en e pt_BR.",
+  );
   for (const locale of ["en", "pt_BR"]) {
     const localePath = `_locales/${locale}/messages.json`;
     const localeEntry = files.find(({ name }) => name === localePath);
-    assert(localeEntry, `Locale ausente: ${localePath}`);
     const messages = JSON.parse(localeEntry.data.toString("utf8"));
     assert(messages.extensionName?.message === "Auri", `Nome inválido na locale ${locale}.`);
     for (const key of ["extensionDescription", "actionTitle"]) {
@@ -97,6 +139,17 @@ export async function validateProductionDist(distDirectory) {
   assert(names.some((name) => name.startsWith("assets/") && name.endsWith(".js")), "JS do popup ausente.");
   assert(names.some((name) => name.startsWith("assets/") && name.endsWith(".css")), "CSS do popup ausente.");
   for (const icon of REQUIRED_ICONS) assert(names.includes(icon), `Ícone ausente: ${icon}`);
+  const allowedFiles = new Set([
+    "manifest.json",
+    "index.html",
+    ...REQUIRED_ICONS,
+    "_locales/en/messages.json",
+    "_locales/pt_BR/messages.json",
+  ]);
+  assert(
+    names.every((name) => allowedFiles.has(name) || /^assets\/[^/]+\.(?:js|css)$/u.test(name)),
+    "O pacote contém arquivo inesperado.",
+  );
 
   const javascript = files
     .filter(({ name }) => name.endsWith(".js"))
@@ -104,9 +157,19 @@ export async function validateProductionDist(distDirectory) {
     .join("\n");
   assert(javascript.includes(PRODUCTION_HOST), "O bundle não contém o Native Host de produção.");
   assert(!javascript.includes(DEVELOPMENT_HOST), "O bundle contém o Native Host DEV.");
+  assert(!javascript.includes("Auri-Dev"), "O bundle contém configuração DEV.");
+  assert(
+    !/(?:MockAuriTransport|MOCK_SCENARIOS|matched_no_source|missing_capability)/u.test(javascript),
+    "O bundle de produção contém configuração mock.",
+  );
   assert(!names.some((name) => name.endsWith(".map")), "O pacote contém sourcemaps.");
   assert(!names.some((name) => name.startsWith("node_modules/")), "O pacote contém node_modules.");
   assert(!names.some((name) => /^(src|tests)\//u.test(name)), "O pacote contém código-fonte ou testes.");
+  assert(!names.some((name) => /(?:^|\/)(?:\.env|.*\.(?:pem|key|p12|pfx))$/iu.test(name)), "O pacote contém ambiente ou chave privada.");
+  assert(
+    !files.some(({ data }) => data.toString("utf8").includes("PRIVATE KEY-----")),
+    "O pacote contém material de chave privada.",
+  );
 
   return files;
 }
@@ -203,6 +266,34 @@ export async function createStorePackage(projectRoot) {
   await mkdir(releaseDirectory, { recursive: true });
   await writeFile(outputPath, zipBuffer);
   return { outputPath, files, zipBytes: zipBuffer.length };
+}
+
+export async function createEmbeddedPackage(projectRoot) {
+  const distDirectory = resolve(projectRoot, "artifacts", "embedded");
+  const releaseDirectory = resolve(projectRoot, "release");
+  const outputPath = resolve(releaseDirectory, EMBEDDED_PACKAGE_NAME);
+  const metadataPath = resolve(releaseDirectory, EMBEDDED_METADATA_NAME);
+  const files = await validateProductionDist(distDirectory, { variant: "embedded" });
+  const zipBuffer = createZipBuffer(files);
+  const zipEntries = listZipEntries(zipBuffer);
+  assert(
+    JSON.stringify(zipEntries) === JSON.stringify(files.map(({ name }) => name)),
+    "O conteúdo do ZIP Embedded diverge do build.",
+  );
+  const sha256 = createHash("sha256").update(zipBuffer).digest("hex");
+  const metadata = {
+    version: packageMetadata.version,
+    extensionId: calculateEmbeddedExtensionId(),
+    sha256,
+    manifestVersion: 3,
+    defaultLocale: "en",
+    protocolVersion: PROTOCOL_VERSION,
+    hostName: PRODUCTION_HOST,
+  };
+  await mkdir(releaseDirectory, { recursive: true });
+  await writeFile(outputPath, zipBuffer);
+  await writeFile(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
+  return { outputPath, metadataPath, metadata, files, zipBytes: zipBuffer.length };
 }
 
 async function main() {

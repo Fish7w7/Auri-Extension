@@ -37,9 +37,9 @@ describe("catálogos i18n e manifest", () => {
     expect(manifest.action.default_title).toBe("__MSG_actionTitle__");
   });
 
-  it("mantém versão 0.1.1 consistente sem alterar Protocol nem permissões", () => {
+  it("mantém versão 0.2.0 consistente sem alterar Protocol nem permissões", () => {
     const lock = JSON.parse(readFileSync(resolve(projectRoot, "package-lock.json"), "utf8"));
-    expect(packageMetadata.version).toBe("0.1.1");
+    expect(packageMetadata.version).toBe("0.2.0");
     expect(manifest.version).toBe(packageMetadata.version);
     expect(lock.version).toBe(packageMetadata.version);
     expect(lock.packages[""].version).toBe(packageMetadata.version);

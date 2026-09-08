@@ -1,14 +1,16 @@
 {
   "name": "auri-extension",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Extensão oficial do Auri para Chrome e Edge.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:embedded": "vite build --mode embedded",
     "build:dev:native": "vite build --mode dev-native",
     "package:store": "node scripts/release/package-store.mjs",
+    "package:embedded": "node scripts/release/package-embedded.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

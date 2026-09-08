@@ -29,13 +29,21 @@ Use `VITE_AURI_TRANSPORT=mock` e defina `VITE_AURI_MOCK_SCENARIO` como um dos va
 
 ## Builds
 
-### Produção
+### Store PROD
 
 ```bash
 npm run build
 ```
 
-Esse comando sempre gera uma extensão de produção com o Native Host `app.auri.native_host`. Uma variável `VITE_AURI_TRANSPORT` no ambiente não pode selecionar mock ou host DEV nesse build.
+Esse comando gera `dist/` para publicação no Microsoft Edge Add-ons. O manifest não contém a chave da variante Embedded e o Native Host é `app.auri.native_host`.
+
+### Embedded PROD
+
+```bash
+npm run build:embedded
+```
+
+Esse comando gera `artifacts/embedded/` para a instalação manual guiada no Chrome e Brave pelo Auri Desktop 1.12.0. A extensão usa o host de produção e possui identidade estável própria. Embedded é uma forma de distribuição PROD, não um ambiente DEV.
 
 ### Native Messaging DEV
 
@@ -43,29 +51,33 @@ Esse comando sempre gera uma extensão de produção com o Native Host `app.auri
 npm run build:dev:native
 ```
 
-Esse comando usa o mode `dev-native` e gera uma extensão unpacked configurada para `app.auri.native_host.dev`. O host DEV precisa ter sido instalado e registrado pelo fluxo do Auri Desktop. A extensão não possui menu interno de desenvolvimento.
+Esse comando usa o mode `dev-native`, gera `artifacts/dev-native/` e configura `app.auri.native_host.dev`. O host DEV precisa ter sido instalado e registrado pelo fluxo de desenvolvimento do Auri Desktop. A extensão não possui menu interno de desenvolvimento.
 
 ## Carregar a extensão unpacked
 
-Gere primeiro o build desejado. A pasta `dist/` conterá o Manifest V3, o popup e os assets.
+Gere primeiro o build desejado e selecione a raiz correspondente:
+
+- `artifacts/embedded/` para validar a distribuição PROD guiada no Chrome ou Brave;
+- `artifacts/dev-native/` para E2E com o Native Host DEV;
+- `dist/` somente quando for necessário conferir localmente o pacote Store.
 
 ### Chrome
 
 1. Abra `chrome://extensions`.
 2. Ative **Developer mode**.
 3. Escolha **Load unpacked**.
-4. Selecione a pasta `Auri-Extension/dist/`.
+4. Selecione a pasta da variante que deseja validar.
 
 ### Edge
 
 1. Abra `edge://extensions`.
 2. Ative **Developer mode**.
 3. Escolha **Load unpacked**.
-4. Selecione a pasta `Auri-Extension/dist/`.
+4. Selecione a pasta da variante que deseja validar.
 
 ## Internacionalização
 
-A versão 0.1.1 usa a API nativa [chrome.i18n](https://developer.chrome.com/docs/extensions/reference/api/i18n), sem biblioteca de tradução. O navegador escolhe o idioma, com inglês como padrão e fallback (`default_locale: en`):
+A versão 0.2.0 usa a API nativa [chrome.i18n](https://developer.chrome.com/docs/extensions/reference/api/i18n), sem biblioteca de tradução. O navegador escolhe o idioma, com inglês como padrão e fallback (`default_locale: en`):
 
 - English: [public/_locales/en/messages.json](../../public/_locales/en/messages.json);
 - Português (Brasil): [public/_locales/pt_BR/messages.json](../../public/_locales/pt_BR/messages.json).
@@ -74,7 +86,7 @@ Para adicionar uma mensagem, crie a mesma chave nos dois arquivos e use `t("chav
 
 Frases com valores dinâmicos usam placeholders nomeados no JSON (por exemplo, `$CHAPTER$` com `content: "$1"`) e `t("updateProgress", chapter.value)`. Não traduza títulos, sites ou dados recebidos da página ou do Desktop. Mantenha as mesmas chaves, placeholders e posições nos dois idiomas; os testes focados em `tests/i18n/` verificam essa paridade.
 
-O build copia os dois catálogos para `dist/_locales/`. A listagem PT-BR no Partner Center será preenchida manualmente após o envio do novo pacote; os catálogos não substituem os textos da loja.
+Cada build copia os dois catálogos para seu próprio diretório de saída. Os catálogos não substituem os textos localizados configurados na loja.
 
 ## Validação
 
@@ -82,10 +94,11 @@ O build copia os dois catálogos para `dist/_locales/`. A listagem PT-BR no Part
 npm test
 npm run typecheck
 npm run build
+npm run build:embedded
 ```
 
 Use `npm run build:dev:native` adicionalmente quando a alteração envolver o fluxo Native Messaging DEV.
 
 ## Empacotamento e publicação
 
-O empacotamento para lojas, o conteúdo do ZIP e o estado de distribuição ficam no [checklist de publicação](../store/release-checklist.md). Os textos usados nas lojas estão em [store-listing.md](../store/store-listing.md).
+Os pacotes Store e Embedded, seus outputs e a metadata consumida pelo Desktop estão na [documentação de distribuição](../store/distribution.md). Os textos usados na loja estão em [store-listing.md](../store/store-listing.md).
