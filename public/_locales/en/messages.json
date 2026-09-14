@@ -16,7 +16,7 @@
     "placeholders": {
       "version": {
         "content": "$1",
-        "example": "0.2.0"
+        "example": "0.3.0"
       }
     }
   },
@@ -48,13 +48,13 @@
     "message": "Couldn't complete the action. Please try again."
   },
   "statusLoading": {
-    "message": "Analyzing page"
+    "message": "Checking library"
   },
   "loadingTitle": {
-    "message": "Analyzing this page…"
+    "message": "Checking your library…"
   },
   "loadingDescription": {
-    "message": "Reading only the information needed."
+    "message": "Looking up this page in Auri."
   },
   "statusUnsupported": {
     "message": "Unsupported page"
@@ -79,6 +79,18 @@
   },
   "disconnectedDescription": {
     "message": "Open Auri on your computer to use this extension."
+  },
+  "statusIntegrationUnavailable": {
+    "message": "Integration unavailable"
+  },
+  "integrationUnavailableEyebrow": {
+    "message": "Integration unavailable"
+  },
+  "integrationUnavailableTitle": {
+    "message": "The Auri browser integration isn't configured."
+  },
+  "integrationUnavailableDescription": {
+    "message": "Repair the browser integration from Auri Desktop and try again."
   },
   "retry": {
     "message": "Try again"
@@ -189,7 +201,7 @@
     }
   },
   "updateProgress": {
-    "message": "Update to $CHAPTER$",
+    "message": "Update to chapter $CHAPTER$",
     "placeholders": {
       "chapter": {
         "content": "$1",
@@ -208,5 +220,80 @@
   },
   "addSource": {
     "message": "Add this source"
+  },
+  "workContextLabel": {
+    "message": "Reading context"
+  },
+  "savedProgressLabel": {
+    "message": "Your progress"
+  },
+  "userStatusWantToRead": {
+    "message": "Want to read"
+  },
+  "userStatusReading": {
+    "message": "Reading"
+  },
+  "userStatusPaused": {
+    "message": "Paused"
+  },
+  "userStatusWaiting": {
+    "message": "Waiting"
+  },
+  "userStatusCompleted": {
+    "message": "Completed"
+  },
+  "userStatusDropped": {
+    "message": "Dropped"
+  },
+  "stoppedAtChapter": {
+    "message": "You stopped at chapter $CHAPTER$.",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "upToDate": {
+    "message": "You're up to date."
+  },
+  "noProgress": {
+    "message": "No chapter recorded yet."
+  },
+  "markChapter": {
+    "message": "Mark chapter $CHAPTER$",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "continueChapter": {
+    "message": "Continue at chapter $CHAPTER$",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "continueReading": {
+    "message": "Continue reading"
+  },
+  "sourceLinked": {
+    "message": "Linked source"
+  },
+  "sourceUnlinked": {
+    "message": "Unlinked source"
+  },
+  "sourceAmbiguous": {
+    "message": "Source not confirmed"
+  },
+  "sourceUnlinkedDescription": {
+    "message": "This page isn't linked as a source yet."
+  },
+  "sourceAmbiguousDescription": {
+    "message": "Auri couldn't confirm this source safely."
   }
 }

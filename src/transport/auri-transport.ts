@@ -10,6 +10,8 @@ import type {
   ProtocolError,
   WorkOpenParams,
   WorkOpenResult,
+  WorkContextParams,
+  WorkContextResult,
   WorkResolveParams,
   WorkResolveResult,
 } from "@auri/protocol";
@@ -17,6 +19,7 @@ import type {
 export interface AuriTransport {
   hello(params: SystemHelloParams): Promise<SystemHelloResult>;
   resolveWork(params: WorkResolveParams): Promise<WorkResolveResult>;
+  getWorkContext(params: WorkContextParams): Promise<WorkContextResult>;
   openWork(params: WorkOpenParams): Promise<WorkOpenResult>;
   openAddWork(params: DesktopOpenAddWorkParams): Promise<DesktopOpenAddWorkResult>;
   addSource(params: SourceAddParams): Promise<SourceAddResult>;
@@ -46,10 +49,14 @@ export class TransportFailure extends Error {
 
 export function isDesktopUnavailableFailure(error: unknown): boolean {
   return error instanceof TransportFailure && (
-    error.kind === "host_not_found" ||
-    error.kind === "host_start_failed" ||
     error.kind === "disconnected" ||
     error.protocolError?.code === "AURI_NOT_READY"
+  );
+}
+
+export function isNativeHostUnavailableFailure(error: unknown): boolean {
+  return error instanceof TransportFailure && (
+    error.kind === "host_not_found" || error.kind === "host_start_failed"
   );
 }
 

@@ -28,8 +28,9 @@ const ready = (result: WorkResolveResult): Extract<PopupState, { status: "ready"
 
 const translations = {
   en: {
-    loading: "Analyzing this page…", unsupported: "Auri can't analyze this page.",
-    disconnected: "Auri Desktop is unavailable.",
+    loading: "Checking your library…", unsupported: "Auri can't analyze this page.",
+    desktop_unavailable: "Auri Desktop is unavailable.",
+    integration_unavailable: "The Auri browser integration isn't configured.",
     incompatible: "This extension version isn't compatible with your current Auri version.",
     error: "Couldn't connect to Auri right now.", retry: "Try again",
     context: "Analyzed page", currentPage: "Current page", progress: "Progress",
@@ -38,7 +39,7 @@ const translations = {
     addWorkSuccess: "Auri opened to add the work.", detected: "Detected chapter: Ch. 327.5",
     ambiguous: "We found more than one possible work.", open: "Open", current: "Current: Ch. 326",
     namedSuccess: `${matched.work.title} opened in Auri.`,
-    update: "Update to 327.5", updateSuccess: "Progress updated to 327.5.", wait: "Please wait…",
+    update: "Update to chapter 327.5", updateSuccess: "Progress updated to 327.5.", wait: "Please wait…",
     openWork: "Open in Auri", openWorkSuccess: "Work opened in Auri.",
     addSource: "Add this source", addSourceSuccess: "Source added to the work.",
     conflict: "This change needs to be confirmed in the Auri app.",
@@ -46,8 +47,9 @@ const translations = {
     previous: "This page is behind your current progress.",
   },
   pt_BR: {
-    loading: "Analisando esta página…", unsupported: "Esta página não pode ser analisada pelo Auri.",
-    disconnected: "O Auri Desktop não está disponível.",
+    loading: "Consultando sua biblioteca…", unsupported: "Esta página não pode ser analisada pelo Auri.",
+    desktop_unavailable: "O Auri Desktop não está disponível.",
+    integration_unavailable: "A integração do navegador com o Auri não está configurada.",
     incompatible: "Esta versão da extensão não é compatível com a versão atual do Auri.",
     error: "Não foi possível consultar o Auri agora.", retry: "Tentar novamente",
     context: "Página analisada", currentPage: "Página atual", progress: "Progresso",
@@ -56,7 +58,7 @@ const translations = {
     addWorkSuccess: "Auri aberto para adicionar a obra.", detected: "Capítulo detectado: Cap. 327.5",
     ambiguous: "Encontramos mais de uma obra possível.", open: "Abrir", current: "Atual: Cap. 326",
     namedSuccess: `${matched.work.title} aberto no Auri.`,
-    update: "Atualizar para 327.5", updateSuccess: "Progresso atualizado para 327.5.", wait: "Aguarde…",
+    update: "Atualizar para capítulo 327.5", updateSuccess: "Progresso atualizado para 327.5.", wait: "Aguarde…",
     openWork: "Abrir no Auri", openWorkSuccess: "Obra aberta no Auri.",
     addSource: "Adicionar esta fonte", addSourceSuccess: "Fonte adicionada à obra.",
     conflict: "O Auri precisa que essa alteração seja confirmada no aplicativo.",
@@ -73,13 +75,13 @@ describe.each(["en", "pt_BR"] as const)("popup localizado: %s", (locale) => {
     return render(<PopupView state={state} transport={transport} onRetry={onRetry} />);
   }
 
-  it.each(["loading", "unsupported", "disconnected", "incompatible", "error"] as const)(
+  it.each(["loading", "unsupported", "desktop_unavailable", "integration_unavailable", "incompatible", "error"] as const)(
     "traduz %s e mantém a ação de tentar novamente", (status) => {
       const onRetry = vi.fn();
       renderState({ status, context }, undefined, onRetry);
       expect(screen.getByRole("heading", { name: copy[status] })).toBeInTheDocument();
       expect(screen.getByText(`v${EXTENSION_VERSION}`)).toBeInTheDocument();
-      if (["disconnected", "incompatible", "error"].includes(status)) {
+      if (["desktop_unavailable", "integration_unavailable", "incompatible", "error"].includes(status)) {
         fireEvent.click(screen.getByRole("button", { name: copy.retry }));
         expect(onRetry).toHaveBeenCalledOnce();
       }
@@ -98,7 +100,7 @@ describe.each(["en", "pt_BR"] as const)("popup localizado: %s", (locale) => {
 
   it("traduz o título de fallback da página", () => {
     const { title: _title, ...withoutTitle } = context;
-    renderState({ status: "disconnected", context: withoutTitle });
+    renderState({ status: "desktop_unavailable", context: withoutTitle });
     expect(screen.getByRole("heading", { name: copy.currentPage })).toBeInTheDocument();
   });
 

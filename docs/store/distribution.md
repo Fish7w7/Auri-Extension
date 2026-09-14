@@ -1,6 +1,6 @@
-# Distribuição da Auri Extension 0.2.0
+# Distribuição da Auri Extension 0.3.0
 
-A versão 0.2.0 possui duas variantes de produção separadas. Ambas usam `app.auri.native_host`, Manifest V3, as locales `en` e `pt_BR` e as mesmas permissões.
+A versão 0.3.0 possui duas variantes de produção separadas. Ambas usam `app.auri.native_host`, Manifest V3, as locales `en` e `pt_BR` e as mesmas permissões.
 
 ## Store
 
@@ -10,7 +10,7 @@ npm run package:store
 ```
 
 - Build: `dist/`.
-- Pacote: `release/auri-extension-0.2.0-chromium.zip`.
+- Pacote: `release/auri-extension-0.3.0-chromium.zip`.
 - Destino: atualização da extensão existente no Microsoft Edge Add-ons.
 - ID oficial do Edge: `alnngjgmhiebpnjefjmhbhmhfpgoibnh`.
 - O manifest não contém `key`; a identidade continua sendo administrada pela loja.
@@ -23,9 +23,9 @@ npm run package:embedded
 ```
 
 - Build: `artifacts/embedded/`.
-- Pacote: `release/auri-extension-0.2.0-embedded.zip`.
-- Metadata: `release/auri-extension-0.2.0-embedded.json`.
-- Destino: instalação manual guiada no Chrome e Brave pelo Auri Desktop 1.12.0.
+- Pacote: `release/auri-extension-0.3.0-embedded.zip`.
+- Metadata: `release/auri-extension-0.3.0-embedded.json`.
+- Destino: instalação manual guiada no Chrome e Brave pelo Auri Desktop.
 - ID fixo: `agefiaohfielfgadiagemnflekbboblp`.
 
 O arquivo [config/embedded-extension.json](../../config/embedded-extension.json) contém somente a chave pública DER codificada em Base64 usada no campo [`key` do manifest](https://developer.chrome.com/docs/extensions/reference/manifest/key). Essa chave pública não é um secret e existe apenas para tornar o ID da extensão unpacked determinístico. Nenhuma chave privada é necessária, armazenada ou distribuída.
@@ -40,4 +40,4 @@ A metadata informa versão, ID, SHA-256 do ZIP, Manifest Version, locale padrão
 npm run build:dev:native
 ```
 
-O build DEV fica em `artifacts/dev-native/` e usa `app.auri.native_host.dev`. Ele não deve ser distribuído nem confundido com a variante Embedded.
+O build DEV fica em `artifacts/dev-native/` e usa `app.auri.native_host.dev`. A identidade esperada pelo setup do Desktop é `lfneneebngmiikddoddnlcgobfjkodpm`. Ele não deve ser distribuído nem confundido com a variante Embedded.

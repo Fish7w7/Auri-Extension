@@ -34,7 +34,7 @@ A detecção aceita inteiros e decimais associados a rótulos como `chapter`, `c
 
 Números sem contexto — como anos, IDs, comentários, temporadas ou volumes — não são interpretados como capítulo. Evidência de baixa confiança não habilita atualização rápida de progresso.
 
-A atualização só é oferecida quando o capítulo detectado é numérico, tem confiança suficiente e é posterior ao progresso atual. Não existe regressão ou atualização automática.
+No fluxo avançado, a extensão não compara o capítulo extraído com o progresso. Ela envia a evidência ao Desktop e segue a `relation` de `work.context`. Isso permite exibir também capítulos textuais devolvidos pelo contrato, sem duplicar equivalência ou ordenação no navegador. No fallback para Desktop antigo, permanece a comparação numérica conservadora da versão 0.2. Não existe regressão ou atualização automática.
 
 ## Capa
 

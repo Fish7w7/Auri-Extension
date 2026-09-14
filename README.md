@@ -2,7 +2,7 @@
 
 A **Auri Extension** conecta páginas de leitura no navegador à sua biblioteca local do **Auri Desktop**.
 
-Ela permite reconhecer obras cadastradas, consultar seu progresso, abrir uma obra no Auri, adicionar novas obras ou fontes e atualizar capítulos diretamente pelo navegador.
+Ela permite reconhecer obras cadastradas, consultar onde você parou, continuar pela última página conhecida, abrir uma obra no Auri, adicionar novas obras ou fontes e atualizar capítulos diretamente pelo navegador.
 
 > **Local-first:** a comunicação acontece diretamente entre a extensão e o Auri Desktop instalado no computador, sem conta ou serviço em nuvem.
 
@@ -22,7 +22,8 @@ A extração é conservadora: uma ação só é oferecida quando há contexto su
 
 ## Requisitos
 
-- **Auri Desktop 1.10.0 ou versão posterior compatível**, obrigatório para as funções reais da extensão;
+- **Auri Desktop 1.14.0** para a experiência completa de contexto de leitura;
+- Auri Desktop 1.13 continua compatível com as funções já disponíveis na extensão 0.2;
 - Windows, pois a integração atual depende do Auri Desktop e do Native Host instalado por ele;
 - Microsoft Edge, Google Chrome, Brave ou outro navegador Chromium compatível.
 
@@ -42,7 +43,7 @@ Auri Native Host
 Auri Desktop
 ```
 
-O Auri Desktop continua responsável pela biblioteca, obras, fontes, progresso, histórico e regras de negócio. Não existe content script permanente, monitoramento de abas ou servidor Auri intermediário.
+O Auri Desktop continua responsável pela biblioteca, obras, fontes, progresso, histórico, URL de continuação e regras de negócio. A extensão apenas apresenta o contexto devolvido pelo Desktop. Não existe content script permanente, monitoramento de abas ou servidor Auri intermediário.
 
 Os detalhes estão na [documentação de arquitetura](docs/README.md#arquitetura).
 
@@ -62,7 +63,7 @@ A extensão não solicita `storage` nem `<all_urls>` e não utiliza service work
 
 A extensão continua distribuída oficialmente pelo **Microsoft Edge Add-ons** para o Edge.
 
-Para Chrome e Brave, a versão 0.2.0 prepara uma variante oficial Embedded com ID estável, destinada à instalação manual guiada pelo Auri Desktop 1.12.0. Essa variante não altera a identidade da extensão publicada no Edge.
+Para Chrome e Brave, a variante oficial Embedded possui ID estável e é destinada à instalação manual guiada pelo Auri Desktop. Essa variante não altera a identidade da extensão publicada no Edge.
 
 ## Desenvolvimento
 

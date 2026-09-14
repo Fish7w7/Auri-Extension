@@ -37,14 +37,17 @@ describe("catálogos i18n e manifest", () => {
     expect(manifest.action.default_title).toBe("__MSG_actionTitle__");
   });
 
-  it("mantém versão 0.2.0 consistente sem alterar Protocol nem permissões", () => {
+  it("mantém versão 0.3.0, Protocol 0.2.0 e permissões mínimas", () => {
     const lock = JSON.parse(readFileSync(resolve(projectRoot, "package-lock.json"), "utf8"));
-    expect(packageMetadata.version).toBe("0.2.0");
+    expect(packageMetadata.version).toBe("0.3.0");
     expect(manifest.version).toBe(packageMetadata.version);
     expect(lock.version).toBe(packageMetadata.version);
     expect(lock.packages[""].version).toBe(packageMetadata.version);
-    expect(packageMetadata.dependencies["@auri/protocol"]).toBe("github:Fish7w7/Auri-Protocol#v0.1.3");
-    expect(lock.packages["node_modules/@auri/protocol"].version).toBe("0.1.3");
+    expect(packageMetadata.dependencies["@auri/protocol"]).toBe("github:Fish7w7/Auri-Protocol#v0.2.0");
+    expect(lock.packages["node_modules/@auri/protocol"].version).toBe("0.2.0");
+    expect(lock.packages["node_modules/@auri/protocol"].resolved).toContain(
+      "d49202778bd1eedb8a24e944982a432c6c7c6d6b",
+    );
     expect(manifest.manifest_version).toBe(3);
     expect(manifest.permissions).toEqual(["activeTab", "scripting", "nativeMessaging"]);
     for (const key of ["background", "host_permissions", "optional_permissions", "content_scripts"]) {
@@ -112,7 +115,7 @@ describe("helper nativo e mock chrome.i18n", () => {
     const title = "Minha obra $CHAPTER$ <volume 2>";
     expect(t("openWorkNamedSuccess", title)).toBe(`${title} opened in Auri.`);
     expect(getMessage).toHaveBeenLastCalledWith("openWorkNamedSuccess", title);
-    expect(t("updateProgress", ["327.5"])).toBe("Update to 327.5");
+    expect(t("updateProgress", ["327.5"])).toBe("Update to chapter 327.5");
     expect(getMessage).toHaveBeenLastCalledWith("updateProgress", ["327.5"]);
     expect(chrome.i18n.getMessage("unknown_message")).toBe("");
   });

@@ -1,4 +1,4 @@
-# Metadata para as lojas — Auri 0.2.0
+# Metadata para as lojas — Auri 0.3.0
 
 ## Nome
 
@@ -12,11 +12,11 @@ Conecte suas leituras no navegador à sua biblioteca local do Auri Desktop.
 
 Auri conecta a página de leitura que você está visualizando à sua biblioteca local do Auri Desktop.
 
-Ao abrir a extensão, ela identifica de forma conservadora o contexto da página ativa, como URL, título, site, capítulo e capa disponível. Com sua confirmação, é possível localizar a obra na Biblioteca, abrir o Auri, sugerir uma nova obra ou fonte e atualizar o progresso.
+Ao abrir a extensão, ela identifica de forma conservadora o contexto da página ativa, localiza a obra na Biblioteca e, com Auri Desktop 1.14, mostra o capítulo salvo, permite continuar pela última página conhecida e atualizar o progresso. Também é possível abrir o Auri ou sugerir uma nova obra ou fonte.
 
 A extensão requer o Auri Desktop instalado no mesmo computador. A comunicação acontece localmente por Native Messaging, sem servidor Auri, conta, cloud, analytics ou monitoramento permanente da navegação.
 
-O Microsoft Edge recebe a extensão pelo Edge Add-ons. Chrome e Brave usam a variante Embedded instalada manualmente pelo fluxo guiado do Auri Desktop 1.12.0.
+O Microsoft Edge recebe a extensão pelo Edge Add-ons. Chrome e Brave usam a variante Embedded instalada manualmente pelo fluxo guiado do Auri Desktop.
 
 ## Finalidade principal
 

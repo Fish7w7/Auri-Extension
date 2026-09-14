@@ -72,9 +72,9 @@ describe("pacote da loja", () => {
     expect(names).toContain("icons/auri-128.png");
     expect(names).toContain("_locales/en/messages.json");
     expect(names).toContain("_locales/pt_BR/messages.json");
-    expect(STORE_PACKAGE_NAME).toBe("auri-extension-0.2.0-chromium.zip");
-    expect(EMBEDDED_PACKAGE_NAME).toBe("auri-extension-0.2.0-embedded.zip");
-    expect(EMBEDDED_METADATA_NAME).toBe("auri-extension-0.2.0-embedded.json");
+    expect(STORE_PACKAGE_NAME).toBe("auri-extension-0.3.0-chromium.zip");
+    expect(EMBEDDED_PACKAGE_NAME).toBe("auri-extension-0.3.0-embedded.zip");
+    expect(EMBEDDED_METADATA_NAME).toBe("auri-extension-0.3.0-embedded.json");
     expect(names).not.toContain("assets/popup.js.map");
     expect(names.some((name) => /^(node_modules|src|tests)\//u.test(name))).toBe(false);
   });
@@ -132,7 +132,7 @@ describe("pacote da loja", () => {
     expect(names).toContain("manifest.json");
     expect(names.some((name) => name.startsWith("artifacts/"))).toBe(false);
     expect(metadata).toEqual({
-      version: "0.2.0",
+      version: "0.3.0",
       extensionId: "agefiaohfielfgadiagemnflekbboblp",
       sha256: createHash("sha256").update(zip).digest("hex"),
       manifestVersion: 3,

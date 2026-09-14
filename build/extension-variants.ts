@@ -5,6 +5,8 @@ import { NATIVE_HOST } from "../src/config/native-hosts";
 
 export type ProductionVariant = "store" | "embedded";
 
+export const STORE_EXTENSION_ID = "alnngjgmhiebpnjefjmhbhmhfpgoibnh";
+export const DEV_EXTENSION_ID = "lfneneebngmiikddoddnlcgobfjkodpm";
 export const EMBEDDED_PUBLIC_KEY = embeddedIdentity.publicKey;
 
 function publicKeyBytes(publicKey: string): Buffer {
@@ -56,5 +58,10 @@ export function resolveBuildSettings(mode: string, requestedTransport?: string) 
     : mode === "dev-native"
       ? "artifacts/dev-native"
       : "dist";
-  return { productionVariant, transport, hostName, outDir } as const;
+  const extensionId = mode === "embedded"
+    ? EMBEDDED_EXTENSION_ID
+    : mode === "dev-native" || mode === "development"
+      ? DEV_EXTENSION_ID
+      : STORE_EXTENSION_ID;
+  return { productionVariant, transport, hostName, outDir, extensionId } as const;
 }

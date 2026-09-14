@@ -16,6 +16,7 @@ Este diretório reúne os detalhes técnicos e operacionais que não precisam fi
 
 - [Metadata para as lojas](store/store-listing.md).
 - [Builds e pacotes de distribuição](store/distribution.md).
+- [Notas da versão 0.3.0](store/release-notes-0.3.0.md).
 - [Notas da versão 0.2.0](store/release-notes-0.2.0.md).
 
 ## Privacidade

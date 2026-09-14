@@ -16,7 +16,7 @@
     "placeholders": {
       "version": {
         "content": "$1",
-        "example": "0.2.0"
+        "example": "0.3.0"
       }
     }
   },
@@ -48,13 +48,13 @@
     "message": "Não foi possível concluir. Tente novamente."
   },
   "statusLoading": {
-    "message": "Analisando página"
+    "message": "Consultando biblioteca"
   },
   "loadingTitle": {
-    "message": "Analisando esta página…"
+    "message": "Consultando sua biblioteca…"
   },
   "loadingDescription": {
-    "message": "Coletando apenas o contexto necessário."
+    "message": "Verificando esta página no Auri."
   },
   "statusUnsupported": {
     "message": "Página não suportada"
@@ -79,6 +79,18 @@
   },
   "disconnectedDescription": {
     "message": "Abra o Auri no computador para usar esta extensão."
+  },
+  "statusIntegrationUnavailable": {
+    "message": "Integração indisponível"
+  },
+  "integrationUnavailableEyebrow": {
+    "message": "Integração indisponível"
+  },
+  "integrationUnavailableTitle": {
+    "message": "A integração do navegador com o Auri não está configurada."
+  },
+  "integrationUnavailableDescription": {
+    "message": "Repare a integração pelo Auri Desktop e tente novamente."
   },
   "retry": {
     "message": "Tentar novamente"
@@ -189,7 +201,7 @@
     }
   },
   "updateProgress": {
-    "message": "Atualizar para $CHAPTER$",
+    "message": "Atualizar para capítulo $CHAPTER$",
     "placeholders": {
       "chapter": {
         "content": "$1",
@@ -208,5 +220,80 @@
   },
   "addSource": {
     "message": "Adicionar esta fonte"
+  },
+  "workContextLabel": {
+    "message": "Contexto da leitura"
+  },
+  "savedProgressLabel": {
+    "message": "Seu progresso"
+  },
+  "userStatusWantToRead": {
+    "message": "Quero ler"
+  },
+  "userStatusReading": {
+    "message": "Lendo"
+  },
+  "userStatusPaused": {
+    "message": "Pausada"
+  },
+  "userStatusWaiting": {
+    "message": "Aguardando"
+  },
+  "userStatusCompleted": {
+    "message": "Concluída"
+  },
+  "userStatusDropped": {
+    "message": "Abandonada"
+  },
+  "stoppedAtChapter": {
+    "message": "Você parou no capítulo $CHAPTER$.",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "upToDate": {
+    "message": "Você está em dia."
+  },
+  "noProgress": {
+    "message": "Nenhum capítulo registrado ainda."
+  },
+  "markChapter": {
+    "message": "Marcar capítulo $CHAPTER$",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "continueChapter": {
+    "message": "Continuar no capítulo $CHAPTER$",
+    "placeholders": {
+      "chapter": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "continueReading": {
+    "message": "Continuar leitura"
+  },
+  "sourceLinked": {
+    "message": "Fonte vinculada"
+  },
+  "sourceUnlinked": {
+    "message": "Fonte não vinculada"
+  },
+  "sourceAmbiguous": {
+    "message": "Fonte não confirmada"
+  },
+  "sourceUnlinkedDescription": {
+    "message": "Esta página ainda não está vinculada como fonte."
+  },
+  "sourceAmbiguousDescription": {
+    "message": "Não foi possível confirmar esta fonte com segurança."
   }
 }

@@ -84,11 +84,11 @@ class RecordingAddWorkTransport extends MockAuriTransport {
 describe("PopupView", () => {
   it("mostra loading leve", () => {
     renderState({ status: "loading" });
-    expect(screen.getByRole("heading", { name: "Analisando esta página…" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Consultando sua biblioteca…" })).toBeInTheDocument();
   });
 
   it("mostra estado desconectado", () => {
-    renderState({ status: "disconnected", context });
+    renderState({ status: "desktop_unavailable", context });
     expect(screen.getByText("O Auri Desktop não está disponível.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeInTheDocument();
   });
@@ -97,7 +97,7 @@ describe("PopupView", () => {
     renderState(ready(matched));
     expect(screen.getByRole("heading", { name: "Nano Machine" })).toBeInTheDocument();
     expect(screen.getByText("Cap. 327")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Atualizar para 327" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Atualizar para capítulo 327" })).toBeInTheDocument();
     expect(screen.getByText("Fonte reconhecida")).toBeInTheDocument();
   });
 
@@ -165,7 +165,7 @@ describe("PopupView", () => {
 
   it("oculta atualização quando a capability não foi negociada", () => {
     renderState(ready(matched, { capabilities: CAPABILITIES.filter((item) => item !== "progress.update") }));
-    expect(screen.queryByRole("button", { name: "Atualizar para 327" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Atualizar para capítulo 327" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Abrir no Auri" })).toBeInTheDocument();
   });
 
@@ -189,6 +189,7 @@ describe("PopupView", () => {
   });
 
   it("orienta confirmação no Desktop ao receber CONFLICT", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     class ConflictTransport extends MockAuriTransport {
       override updateProgress(
         _params: ProgressUpdateParams,
@@ -205,7 +206,7 @@ describe("PopupView", () => {
       onRetry={vi.fn()}
     />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Atualizar para 327" }));
+    fireEvent.click(screen.getByRole("button", { name: "Atualizar para capítulo 327" }));
 
     expect(await screen.findByText(
       "O Auri precisa que essa alteração seja confirmada no aplicativo.",
@@ -251,14 +252,14 @@ describe("PopupApp com falhas do transporte nativo", () => {
     expect(futureTransport.resolveParams).not.toHaveProperty("coverUrl");
   });
 
-  it.each([
-    ["host ausente", new TransportFailure("host_not_found")],
-    ["Port desconectado", new TransportFailure("disconnected")],
+  it.each<[string, TransportFailure, string]>([
+    ["host ausente", new TransportFailure("host_not_found"), "A integração do navegador com o Auri não está configurada."],
+    ["Port desconectado", new TransportFailure("disconnected"), "O Auri Desktop não está disponível."],
     ["Auri iniciando", new TransportFailure("protocol", {
       code: "AURI_NOT_READY",
       message: "Auri ainda não está pronto",
-    })],
-  ])("mostra estado recuperável quando %s", async (_label, failure) => {
+    }), "O Auri Desktop não está disponível."],
+  ])("mostra estado recuperável quando %s", async (_label, failure, title) => {
     class UnavailableTransport extends MockAuriTransport {
       override hello(
         _params: SystemHelloParams,
@@ -271,7 +272,7 @@ describe("PopupApp com falhas do transporte nativo", () => {
       readPage={async () => ({ status: "ready", context })}
     />);
 
-    expect(await screen.findByText("O Auri Desktop não está disponível.")).toBeInTheDocument();
+    expect(await screen.findByText(title)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeInTheDocument();
   });
 });

@@ -16,6 +16,8 @@ import {
   type SystemHelloResult,
   type WorkOpenParams,
   type WorkOpenResult,
+  type WorkContextParams,
+  type WorkContextResult,
   type WorkResolveParams,
   type WorkResolveResult,
 } from "@auri/protocol";
@@ -76,6 +78,10 @@ export class NativeMessagingTransport implements AuriTransport {
 
   resolveWork(params: WorkResolveParams): Promise<WorkResolveResult> {
     return this.send(PROTOCOL_METHOD.workResolve, params);
+  }
+
+  getWorkContext(params: WorkContextParams): Promise<WorkContextResult> {
+    return this.send(PROTOCOL_METHOD.workContext, params);
   }
 
   openWork(params: WorkOpenParams): Promise<WorkOpenResult> {

@@ -26,6 +26,11 @@ Use `VITE_AURI_TRANSPORT=mock` e defina `VITE_AURI_MOCK_SCENARIO` como um dos va
 - `incompatible` — protocolo incompatível;
 - `error` — falha recuperável;
 - `missing_capability` — obra encontrada sem `progress.update`.
+- `legacy` — simula Desktop 1.13 sem `work.context`;
+- `context_series` — página raiz com target de continuação;
+- `context_ahead`, `context_same` e `context_behind` — relações de progresso;
+- `context_no_progress` — obra sem capítulo registrado;
+- `context_unlinked` e `context_ambiguous` — estados de fonte do contexto avançado.
 
 ## Builds
 
@@ -43,7 +48,7 @@ Esse comando gera `dist/` para publicação no Microsoft Edge Add-ons. O manifes
 npm run build:embedded
 ```
 
-Esse comando gera `artifacts/embedded/` para a instalação manual guiada no Chrome e Brave pelo Auri Desktop 1.12.0. A extensão usa o host de produção e possui identidade estável própria. Embedded é uma forma de distribuição PROD, não um ambiente DEV.
+Esse comando gera `artifacts/embedded/` para a instalação manual guiada no Chrome e Brave pelo Auri Desktop. A extensão usa o host de produção e possui identidade estável própria. Embedded é uma forma de distribuição PROD, não um ambiente DEV.
 
 ### Native Messaging DEV
 
@@ -52,6 +57,8 @@ npm run build:dev:native
 ```
 
 Esse comando usa o mode `dev-native`, gera `artifacts/dev-native/` e configura `app.auri.native_host.dev`. O host DEV precisa ter sido instalado e registrado pelo fluxo de desenvolvimento do Auri Desktop. A extensão não possui menu interno de desenvolvimento.
+
+O fluxo do Desktop continua sendo `npm run dev:extension:setup` seguido de `npm run dev`. Ele prepara `build/generated/browser-extension-dev`, cuja identidade registrada é `lfneneebngmiikddoddnlcgobfjkodpm`. Essa identidade e o host `.dev` nunca são usados nas variantes PROD.
 
 ## Carregar a extensão unpacked
 
@@ -77,7 +84,7 @@ Gere primeiro o build desejado e selecione a raiz correspondente:
 
 ## Internacionalização
 
-A versão 0.2.0 usa a API nativa [chrome.i18n](https://developer.chrome.com/docs/extensions/reference/api/i18n), sem biblioteca de tradução. O navegador escolhe o idioma, com inglês como padrão e fallback (`default_locale: en`):
+A versão 0.3.0 usa a API nativa [chrome.i18n](https://developer.chrome.com/docs/extensions/reference/api/i18n), sem biblioteca de tradução. O navegador escolhe o idioma, com inglês como padrão e fallback (`default_locale: en`):
 
 - English: [public/_locales/en/messages.json](../../public/_locales/en/messages.json);
 - Português (Brasil): [public/_locales/pt_BR/messages.json](../../public/_locales/pt_BR/messages.json).
@@ -98,6 +105,8 @@ npm run build:embedded
 ```
 
 Use `npm run build:dev:native` adicionalmente quando a alteração envolver o fluxo Native Messaging DEV.
+
+Para E2E com o Desktop 1.14, cubra página raiz, Continue, relações ahead/same/behind, atualização com refresh, source unlinked/ambiguous e obra ausente. Quando possível, valide também o fallback com Desktop 1.13 sem `work.context`.
 
 ## Empacotamento e publicação
 

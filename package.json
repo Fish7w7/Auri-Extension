@@ -1,6 +1,6 @@
 {
   "name": "auri-extension",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Extensão oficial do Auri para Chrome e Edge.",
@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@auri/protocol": "github:Fish7w7/Auri-Protocol#v0.1.3",
+    "@auri/protocol": "github:Fish7w7/Auri-Protocol#v0.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

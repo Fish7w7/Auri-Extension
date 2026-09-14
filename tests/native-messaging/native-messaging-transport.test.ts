@@ -63,13 +63,13 @@ class FakeRuntime implements NativeMessagingRuntime {
 }
 
 const helloParams = {
-  client: { kind: "extension" as const, name: "auri-extension", version: "0.1.0" },
+  client: { kind: "extension" as const, name: "auri-extension", version: "0.3.0" },
   supportedProtocolVersions: [PROTOCOL_VERSION],
 };
 
 const helloResult = {
   protocolVersion: PROTOCOL_VERSION,
-  server: { kind: "desktop" as const, name: "Auri Desktop", version: "0.1.0" },
+  server: { kind: "desktop" as const, name: "Auri Desktop", version: "1.14.0" },
   capabilities: [...CAPABILITIES],
 };
 
@@ -170,6 +170,51 @@ describe("conexão e lifecycle", () => {
 });
 
 describe("request/response", () => {
+  it("envia work.context com os tipos oficiais e valida a resposta", async () => {
+    const runtime = new FakeRuntime();
+    const transport = new NativeMessagingTransport({
+      hostName: "test.host",
+      runtime,
+      createRequestId: () => "context-1",
+    });
+    const params = {
+      workId: "work-1",
+      page: {
+        url: "https://site.test/obra/16",
+        canonicalUrl: "https://site.test/obra/capitulo-16",
+        detectedChapter: {
+          value: "16",
+          numericValue: 16,
+          confidence: "high" as const,
+          source: "url" as const,
+        },
+      },
+    };
+    const result = {
+      work: {
+        id: "work-1", title: "Obra", userStatus: "reading" as const,
+        progress: { value: "14", numericValue: 14 },
+      },
+      page: { detectedChapter: params.page.detectedChapter, relation: "ahead" as const },
+      source: {
+        state: "linked" as const,
+        matchedSourceId: "source-1",
+        domain: "site.test",
+      },
+      continueTarget: { url: "https://site.test/obra/14", chapter: { value: "14", numericValue: 14 } },
+    };
+
+    const pending = transport.getWorkContext(params);
+    const request = runtime.ports[0].posted[0] as ProtocolRequest<typeof PROTOCOL_METHOD.workContext>;
+    expect(request).toMatchObject({ method: PROTOCOL_METHOD.workContext, params });
+    runtime.ports[0].emitMessage(createSuccessResponse(
+      request.id,
+      PROTOCOL_METHOD.workContext,
+      result,
+    ));
+    await expect(pending).resolves.toEqual(result);
+  });
+
   it("envia envelope válido e resolve a resposta correlacionada", async () => {
     const runtime = new FakeRuntime();
     const transport = new NativeMessagingTransport({
