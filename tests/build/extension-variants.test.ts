@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
+  E2E_EXTENSION_ID,
+  E2E_PUBLIC_KEY,
   EMBEDDED_EXTENSION_ID,
   EMBEDDED_PUBLIC_KEY,
   DEV_EXTENSION_ID,
@@ -87,5 +89,39 @@ describe("variantes de build", () => {
     expect(DEV_EXTENSION_ID).toBe("lfneneebngmiikddoddnlcgobfjkodpm");
     expect(DEV_EXTENSION_ID).not.toBe(STORE_EXTENSION_ID);
     expect(DEV_EXTENSION_ID).not.toBe(EMBEDDED_EXTENSION_ID);
+  });
+});
+
+
+describe("variante Native Messaging E2E", () => {
+  it("fixa identidade pública exclusiva e nunca escolhe mock ou host PROD/DEV", () => {
+    expect(E2E_EXTENSION_ID).toMatch(/^[a-p]{32}$/u);
+    expect([STORE_EXTENSION_ID, EMBEDDED_EXTENSION_ID, DEV_EXTENSION_ID]).not.toContain(E2E_EXTENSION_ID);
+    expect(calculateExtensionId(E2E_PUBLIC_KEY)).toBe(E2E_EXTENSION_ID);
+    expect(resolveBuildSettings("e2e-native", "mock")).toEqual({
+      productionVariant: "e2e", transport: "native", hostName: "app.auri.native_host.e2e",
+      outDir: "artifacts/e2e-native", extensionId: E2E_EXTENSION_ID,
+    });
+    expect(selectTransport({ MODE: "e2e-native", VITE_AURI_TRANSPORT: "mock" })).toEqual({
+      kind: "native", hostName: NATIVE_HOST.e2e,
+    });
+  });
+  it("mantém versão e permissões e usa somente a chave pública E2E", () => {
+    const result = manifestForVariant({ ...manifest, key: EMBEDDED_PUBLIC_KEY }, "e2e");
+    expect(result).toMatchObject({ key: E2E_PUBLIC_KEY, version: manifest.version, name: "Auri Extension E2E", version_name: manifest.version + " E2E", permissions: manifest.permissions });
+    expect(Object.keys(JSON.parse(readFileSync(resolve(projectRoot, "config/e2e-extension.json"), "utf8")))).toEqual(["publicKey"]);
+    expect(manifest).not.toHaveProperty("key");
+    expect(manifestForVariant(manifest, "embedded")).toHaveProperty("key", EMBEDDED_PUBLIC_KEY);
+    expect(manifestForVariant(manifest, "store")).not.toHaveProperty("key");
+  });
+});
+
+
+describe("versão declarada da variante E2E", () => {
+  it.each(["0.3.1", "1.2.3.4"])("deriva versão e version_name de %s sem mudar o projeto", version => {
+    expect(manifestForVariant({ ...manifest, version }, "e2e")).toMatchObject({ version, version_name: version + " E2E", key: E2E_PUBLIC_KEY });
+  });
+  it.each([undefined, 3, " 0.3.1", "0.3.1 ", "v0.3.1", "0.03.1", "0.3.1-beta", "1.2.3.4.5", "65536.1", "0.0.0"])("recusa versão não canônica %o", version => {
+    expect(() => manifestForVariant({ ...manifest, version }, "e2e")).toThrow("Versão");
   });
 });

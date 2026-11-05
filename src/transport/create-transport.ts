@@ -14,6 +14,9 @@ export type TransportSelection =
   | { readonly kind: "mock"; readonly scenario: ReturnType<typeof getMockScenario> };
 
 export function selectTransport(environment: TransportEnvironment): TransportSelection {
+  if (environment.MODE === "e2e-native") {
+    return { kind: "native", hostName: NATIVE_HOST.e2e };
+  }
   if (environment.MODE === "production" || environment.MODE === "embedded") {
     return { kind: "native", hostName: NATIVE_HOST.production };
   }
