@@ -302,7 +302,7 @@ describe("relações e ações do contexto de leitura", () => {
 
     releaseUpdate();
     expect(await screen.findByText("Você está em dia.")).toBeInTheDocument();
-    expect(screen.getAllByText("Cap. 16")).toHaveLength(2);
+    expect(screen.getAllByText("Cap. 16")).toHaveLength(3);
     expect(transport.contextCalls).toHaveLength(2);
     expect(transport.progressCalls).toEqual([{
       workId: matched.work.id,

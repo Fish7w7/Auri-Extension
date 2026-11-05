@@ -66,7 +66,7 @@ const ready = (
   status: "ready",
   context: values.context ?? context,
   result,
-  capabilities: values.capabilities ?? [...CAPABILITIES],
+  capabilities: values.capabilities ?? CAPABILITIES.filter(capability => capability !== "work.context"),
   ...(values.coverUrl ? { coverUrl: values.coverUrl } : {}),
 });
 

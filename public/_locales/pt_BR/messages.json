@@ -191,15 +191,6 @@
   "previousChapterHint": {
     "message": "Esta página está antes do progresso atual."
   },
-  "updateProgressSuccess": {
-    "message": "Progresso atualizado para $CHAPTER$.",
-    "placeholders": {
-      "chapter": {
-        "content": "$1",
-        "example": "327"
-      }
-    }
-  },
   "updateProgress": {
     "message": "Atualizar para capítulo $CHAPTER$",
     "placeholders": {
@@ -295,5 +286,101 @@
   },
   "sourceAmbiguousDescription": {
     "message": "Não foi possível confirmar esta fonte com segurança."
+  },
+  "progressUpdating": {
+    "message": "Atualizando progresso…"
+  },
+  "progressConfirming": {
+    "message": "Confirmando no Auri…"
+  },
+  "progressConfirmed": {
+    "message": "Progresso confirmado"
+  },
+  "progressDivergent": {
+    "message": "Progresso diferente do solicitado"
+  },
+  "progressRejectedTitle": {
+    "message": "Atualização não realizada"
+  },
+  "progressUnconfirmed": {
+    "message": "Confirmação indisponível"
+  },
+  "progressPrevious": {
+    "message": "Anterior"
+  },
+  "progressSaved": {
+    "message": "Salvo no Auri"
+  },
+  "progressConfirmedDescription": {
+    "message": "O capítulo $CHAPTER$ foi confirmado na biblioteca local do Auri.",
+    "placeholders": {
+      "chapter": {
+        "content": "$1"
+      }
+    }
+  },
+  "progressMismatch": {
+    "message": "Não foi possível confirmar o capítulo $REQUESTED$. O Auri informou que o progresso salvo é o capítulo $SAVED$.",
+    "placeholders": {
+      "requested": {
+        "content": "$1"
+      },
+      "saved": {
+        "content": "$2"
+      }
+    }
+  },
+  "progressMissing": {
+    "message": "Não foi possível confirmar o capítulo $CHAPTER$. O Auri informou que não há progresso salvo.",
+    "placeholders": {
+      "chapter": {
+        "content": "$1"
+      }
+    }
+  },
+  "progressRejected": {
+    "message": "O Auri recusou a atualização. O capítulo não foi cadastrado por esta operação."
+  },
+  "progressSentUnconfirmed": {
+    "message": "A atualização foi enviada, mas não foi possível confirmar o capítulo salvo."
+  },
+  "progressUncertain": {
+    "message": "Não foi possível saber se a atualização foi concluída. Consulte o progresso antes de tentar atualizar novamente."
+  },
+  "progressWrongWork": {
+    "message": "A resposta pertence a outra obra. Os dados desta obra foram mantidos."
+  },
+  "progressInvalidEvidence": {
+    "message": "O capítulo retornado não pôde ser comparado com segurança."
+  },
+  "progressVerifyAgain": {
+    "message": "Consultar novamente"
+  },
+  "progressConnectionUnconfirmed": {
+    "message": "Não foi possível confirmar a atualização"
+  },
+  "progressConnectionInterrupted": {
+    "message": "A comunicação com o Auri foi interrompida. Consulte novamente para verificar o capítulo salvo."
+  },
+  "possibleMatchEyebrow": {
+    "message": "Possível correspondência"
+  },
+  "possibleMatchTitle": {
+    "message": "Confira a obra no Auri"
+  },
+  "possibleMatchDescription": {
+    "message": "Esta página pode corresponder à obra abaixo, mas a identidade ainda não foi confirmada. Confira no Auri antes de vincular fontes ou atualizar o progresso."
+  },
+  "possibleMatchOpen": {
+    "message": "Conferir possível obra no Auri"
+  },
+  "progressInvalidRequestTitle": {
+    "message": "Não foi possível validar o capítulo"
+  },
+  "progressInvalidRequest": {
+    "message": "O capítulo informado não pôde ser enviado. Confira os dados antes de tentar novamente."
+  },
+  "progressWeakIdentity": {
+    "message": "A nova consulta não confirmou a identidade da obra com segurança. Confira no Auri antes de atualizar novamente."
   }
 }

@@ -10,7 +10,7 @@ import {
   type WorkContextResult,
   type WorkResolveResult,
 } from "@auri/protocol";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { EXTENSION_VERSION } from "../config/extension";
 import { readActivePage, type ActivePageResult } from "../extraction/read-active-tab";
@@ -23,6 +23,10 @@ import {
   type AuriTransport,
 } from "../transport/auri-transport";
 import { createTransport } from "../transport/create-transport";
+import { useProgressConfirmation } from "./use-progress-confirmation";
+import { assertTrustedWorkIdentity, hasTrustedWorkIdentity, runWithTrustedWorkIdentity, UntrustedWorkIdentityError } from "./work-identity";
+import { canUseDetectedChapter, normalizeProgressChapter } from "./progress-confirmation";
+import { ProgressFeedback } from "./ProgressFeedback";
 import type { PopupState } from "./popup-state";
 
 type NavigateToUrl = (url: string) => Promise<unknown>;
@@ -59,8 +63,13 @@ export function PopupApp({
   const transport = useMemo(() => providedTransport ?? createTransport(), [providedTransport]);
   const [state, setState] = useState<PopupState>({ status: "loading" });
 
+  const loadSequence = useRef(0);
+  const invalidateLoads = useCallback(() => { loadSequence.current += 1; }, []);
+
   const load = useCallback(async (preserveCurrent = false) => {
-    if (!preserveCurrent) setState({ status: "loading" });
+    const id = ++loadSequence.current;
+    const commit = (next: PopupState) => { if (id === loadSequence.current) setState(next); };
+    if (!preserveCurrent) commit({ status: "loading" });
     let context: PageContext | undefined;
 
     try {
@@ -69,27 +78,31 @@ export function PopupApp({
         supportedProtocolVersions: [PROTOCOL_VERSION],
       });
       if (hello.protocolVersion !== PROTOCOL_VERSION) {
-        setState({ status: "incompatible" });
+        commit({ status: "incompatible" });
         return;
       }
+      if (id !== loadSequence.current) return;
       const capabilities = hello.capabilities.filter(isKnownCapability);
       if (!capabilities.includes("work.resolve")) {
-        setState({ status: "error" });
+        commit({ status: "error" });
         return;
       }
 
       const page = await readPage();
       if (page.status === "unsupported") {
-        setState({ status: "unsupported" });
+        commit({ status: "unsupported" });
         return;
       }
+      if (id !== loadSequence.current) return;
       context = page.context;
       const result = await transport.resolveWork(context);
-      const workContext = result.status === "matched" && capabilities.includes("work.context")
+      if (id !== loadSequence.current) return;
+      const workContext = hasTrustedWorkIdentity(result) && capabilities.includes("work.context")
         ? await transport.getWorkContext(createWorkContextParams(result.work.id, context))
         : undefined;
 
-      setState({
+      if (workContext && result.status === "matched" && workContext.work.id !== result.work.id) throw new TransportFailure("invalid_message");
+      commit({
         status: "ready",
         context,
         result,
@@ -100,29 +113,32 @@ export function PopupApp({
     } catch (error) {
       const withContext = context ? { context } : {};
       if (isNativeHostUnavailableFailure(error)) {
-        setState({ status: "integration_unavailable", ...withContext });
+        commit({ status: "integration_unavailable", ...withContext });
       } else if (isDesktopUnavailableFailure(error)) {
-        setState({ status: "desktop_unavailable", ...withContext });
+        commit({ status: "desktop_unavailable", ...withContext });
       } else if (isIncompatibleFailure(error)) {
-        setState({ status: "incompatible", ...withContext });
+        commit({ status: "incompatible", ...withContext });
       } else {
         if (import.meta.env.DEV) console.error("Falha de comunicação com o Auri", error);
-        setState({ status: "error", ...withContext });
+        commit({ status: "error", ...withContext });
       }
     }
   }, [readPage, transport]);
 
-  const refreshWorkContext = useCallback(async (params: WorkContextParams) => {
-    const workContext = await transport.getWorkContext(params);
-    setState((current) => current.status === "ready"
-      ? { ...current, workContext }
-      : current);
-    return workContext;
-  }, [transport]);
-
   useEffect(() => {
     void load();
-    return () => transport.close();
+    const onActivated = () => { void load(); };
+    const onUpdated = (_id: number, change: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
+      if (tab.active && change.url) void load();
+    };
+    chrome.tabs?.onActivated?.addListener(onActivated);
+    chrome.tabs?.onUpdated?.addListener(onUpdated);
+    return () => {
+      loadSequence.current += 1;
+      chrome.tabs?.onActivated?.removeListener(onActivated);
+      chrome.tabs?.onUpdated?.removeListener(onUpdated);
+      transport.close();
+    };
   }, [load, transport]);
 
   return (
@@ -130,7 +146,7 @@ export function PopupApp({
       state={state}
       transport={transport}
       onRetry={() => load(true)}
-      onRefreshContext={refreshWorkContext}
+      onActionStart={invalidateLoads}
       navigateToUrl={navigateToUrl}
     />
   );
@@ -140,6 +156,7 @@ interface PopupViewProps {
   state: PopupState;
   transport: AuriTransport;
   onRetry: () => void | Promise<void>;
+  onActionStart?: () => void;
   onRefreshContext?: (params: WorkContextParams) => Promise<WorkContextResult>;
   navigateToUrl?: NavigateToUrl;
 }
@@ -198,58 +215,91 @@ function Shell({
 function ActionButton({
   action,
   busy,
+  disabled = false,
   children,
   className = "button-primary",
 }: {
   action: () => Promise<void>;
   busy: boolean;
+  disabled?: boolean;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <button className={className} type="button" disabled={busy} onClick={() => void action()}>
+    <button className={className} type="button" disabled={busy || disabled} onClick={() => void action()}>
       {busy ? t("wait") : children}
     </button>
   );
 }
 
-export function PopupView({
+export function PopupView(props: PopupViewProps) {
+  const transportIdentity = useRef({ value: props.transport, revision: 0 });
+  if (transportIdentity.current.value !== props.transport) transportIdentity.current = { value: props.transport, revision: transportIdentity.current.revision + 1 };
+  const ready = props.state.status === "ready" ? props.state : undefined;
+  const identity = JSON.stringify([props.state.status, ready?.result.status === "matched" ? ready.result.work.id : null, ready?.result.status === "matched" ? ready.result.match : null, "context" in props.state ? props.state.context : null, transportIdentity.current.revision]);
+  return <PopupSession key={identity} {...props} identity={identity} />;
+}
+
+function PopupSession({
   state,
   transport,
   onRetry,
   onRefreshContext,
   navigateToUrl,
-}: PopupViewProps) {
+  onActionStart,
+  identity,
+}: PopupViewProps & { identity: string }) {
   const [pending, setPending] = useState<string>();
   const [feedback, setFeedback] = useState<string>();
-  const refreshContext = onRefreshContext ?? ((params: WorkContextParams) =>
-    transport.getWorkContext(params));
+  const actionLock = useRef(false);
+  const active = useRef(true);
+  useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
+  const ready = state.status === "ready" ? state : undefined;
+  const currentResolution = useRef(ready?.result);
+  currentResolution.current = ready?.result;
+  const progress = useProgressConfirmation({ identity, transport,
+    workId: ready?.result.status === "matched" ? ready.result.work.id : "",
+    resolution: ready?.result,
+    context: ready?.context ?? { url: "https://invalid.example/" },
+    capabilities: ready?.capabilities ?? [], readContext: onRefreshContext,
+  });
+  const refreshContext = progress.refreshContext;
   const navigate = navigateToUrl ?? navigateCurrentTab;
 
   const runAction = async (
     key: string,
     action: () => Promise<unknown>,
     success?: string,
+    workId?: string,
   ) => {
+    if (actionLock.current || !active.current) return;
+    try {
+      if (key === "progress" || key === "source") assertTrustedWorkIdentity(currentResolution.current, workId ?? "");
+    } catch { setFeedback(t("possibleMatchDescription")); return; }
+    actionLock.current = true;
+    onActionStart?.();
     setPending(key);
     setFeedback(undefined);
     try {
-      await action();
-      if (success) setFeedback(success);
+      if (key === "progress" || key === "source") await runWithTrustedWorkIdentity(() => currentResolution.current, workId ?? "", action);
+      else await action();
+      if (active.current && success) setFeedback(success);
     } catch (error) {
       if (import.meta.env.DEV) console.error("Ação do Auri falhou", error);
-      setFeedback(
+      if (active.current) setFeedback(
+        error instanceof UntrustedWorkIdentityError ? t("possibleMatchDescription") :
         error instanceof TransportFailure && error.protocolError?.code === "CONFLICT"
           ? t("actionConflict")
           : t("actionFailed"),
       );
     } finally {
-      setPending(undefined);
+      actionLock.current = false;
+      if (active.current) setPending(undefined);
     }
   };
 
   const retryButton = (
-    <ActionButton
+    <ActionButton disabled={Boolean(pending)}
       className="button-secondary"
       busy={pending === "retry"}
       action={() => runAction("retry", async () => onRetry())}
@@ -339,7 +389,11 @@ export function PopupView({
     );
   }
 
-  const { context, result, capabilities, coverUrl, workContext } = state;
+  const { context, result: initialResult, capabilities, coverUrl } = state;
+  const result = progress.observed?.kind === "resolve" ? progress.observed.result : initialResult;
+  const workContext = progress.observed?.kind === "context" ? progress.observed.result : state.workContext;
+  const progressFeedback = <ProgressFeedback value={progress.confirmation} busy={Boolean(pending)} onVerify={() => void runAction("verify-progress", progress.verify)} />;
+  const canSendProgress = progress.confirmation?.phase !== "unavailable" && progress.confirmation?.phase !== "confirmed";
   const actionFeedback = feedback ? <p className="feedback" role="status">{feedback}</p> : null;
 
   if (result.status === "not_found") {
@@ -363,7 +417,7 @@ export function PopupView({
           <h2>{t("notFoundTitle")}</h2>
           {context.detectedChapter && <p>{t("detectedChapter", formatChapter(context.detectedChapter))}</p>}
           {canAdd && (
-            <ActionButton
+            <ActionButton disabled={Boolean(pending)}
               busy={pending === "add-work"}
               action={() => runAction("add-work", () => transport.openAddWork(draft), t("addWorkSuccess"))}
             >
@@ -389,7 +443,7 @@ export function PopupView({
               <li key={work.id}>
                 <span><strong>{work.title}</strong><small>{t("currentChapter", formatChapter(work.currentChapter))}</small></span>
                 {hasCapability(capabilities, "work.open") && (
-                  <ActionButton
+                  <ActionButton disabled={Boolean(pending)}
                     className="button-quiet"
                     busy={pending === work.id}
                     action={() => runAction(work.id, () => transport.openWork({ workId: work.id }), t("openWorkNamedSuccess", work.title))}
@@ -406,6 +460,27 @@ export function PopupView({
     );
   }
 
+  if (!hasTrustedWorkIdentity(result)) {
+    return (
+      <Shell connection={t("statusConnected")} tone="connected">
+        <PageHeading context={context} />
+        <section className="message-state separated">
+          <p className="eyebrow">{t("possibleMatchEyebrow")}</p>
+          <h2>{t("possibleMatchTitle")}</h2>
+          <p>{t("possibleMatchDescription")}</p>
+          <p><strong>{result.work.title}</strong></p>
+          {hasCapability(capabilities, "work.open") && (
+            <ActionButton disabled={Boolean(pending)} busy={pending === "open"} className="button-secondary"
+              action={() => runAction("open", () => transport.openWork({ workId: result.work.id }), t("openWorkSuccess"))}>
+              {t("possibleMatchOpen")}
+            </ActionButton>
+          )}
+          {actionFeedback}
+        </section>
+      </Shell>
+    );
+  }
+
   if (workContext) {
     return (
       <ReadingContextView
@@ -415,6 +490,9 @@ export function PopupView({
         transport={transport}
         pending={pending}
         feedback={actionFeedback}
+        progressFeedback={progressFeedback}
+        canSendProgress={canSendProgress}
+        updateProgress={progress.update}
         runAction={runAction}
         refreshContext={refreshContext}
         navigateToUrl={navigate}
@@ -425,11 +503,14 @@ export function PopupView({
   return (
     <LegacyMatchedView
       context={context}
-      result={result}
+      result={result as Extract<WorkResolveResult, { status: "matched" }>}
       capabilities={capabilities}
       transport={transport}
       pending={pending}
       feedback={actionFeedback}
+      progressFeedback={progressFeedback}
+      canSendProgress={canSendProgress}
+      updateProgress={progress.update}
       runAction={runAction}
     />
   );
@@ -468,6 +549,9 @@ function ReadingContextView({
   transport,
   pending,
   feedback,
+  progressFeedback,
+  canSendProgress,
+  updateProgress,
   runAction,
   refreshContext,
   navigateToUrl,
@@ -478,14 +562,17 @@ function ReadingContextView({
   transport: AuriTransport;
   pending?: string;
   feedback: React.ReactNode;
-  runAction: (key: string, action: () => Promise<unknown>, success?: string) => Promise<void>;
+  progressFeedback: React.ReactNode;
+  canSendProgress: boolean;
+  updateProgress: ReturnType<typeof useProgressConfirmation>["update"];
+  runAction: (key: string, action: () => Promise<unknown>, success?: string, workId?: string) => Promise<void>;
   refreshContext: (params: WorkContextParams) => Promise<WorkContextResult>;
   navigateToUrl: NavigateToUrl;
 }) {
   const { work, page, source, continueTarget } = result;
   const sourceName = source.name ?? source.domain ?? context.siteName ?? context.domain;
   const linkedSourceId = source.state === "linked" ? source.matchedSourceId : undefined;
-  const updateChapter = page.detectedChapter && (
+  const updateChapter = page.detectedChapter && canUseDetectedChapter(page.detectedChapter) && (
     page.relation === "ahead" || work.progress === null
   ) ? page.detectedChapter : undefined;
   const canUpdate = Boolean(
@@ -510,19 +597,9 @@ function ReadingContextView({
         : undefined;
 
   const update = updateChapter && linkedSourceId
-    ? () => runAction(
-        "progress",
-        async () => {
-          await transport.updateProgress({
-            workId: work.id,
-            chapter: toChapterValue(updateChapter),
-            pageUrl: context.url,
-            sourceId: linkedSourceId,
-          });
-          await refreshContext(refreshParams);
-        },
-        t("updateProgressSuccess", updateChapter.value),
-      )
+    ? () => runAction("progress", () => updateProgress({
+        workId: work.id, chapter: toChapterValue(updateChapter), pageUrl: context.url, sourceId: linkedSourceId,
+      }, work.progress), undefined, work.id)
     : undefined;
 
   const addSource = () => runAction(
@@ -535,7 +612,7 @@ function ReadingContextView({
       });
       await refreshContext(refreshParams);
     },
-    t("addSourceSuccess"),
+    t("addSourceSuccess"), work.id,
   );
 
   const footer = (
@@ -563,6 +640,7 @@ function ReadingContextView({
           <strong>{formatChapter(page.detectedChapter)}</strong>
         </div>
         {relationMessage && <p className="progress-summary">{relationMessage}</p>}
+        {progressFeedback}
       </section>
 
       {source.state === "unlinked" && (
@@ -573,20 +651,20 @@ function ReadingContextView({
       )}
 
       <div className="actions">
-        {canUpdate && updateChapter && update && (
-          <ActionButton busy={pending === "progress"} action={update}>
+        {canSendProgress && canUpdate && updateChapter && update && (
+          <ActionButton disabled={Boolean(pending)} busy={pending === "progress"} action={update}>
             {work.progress === null
               ? t("markChapter", updateChapter.value)
               : t("updateProgress", updateChapter.value)}
           </ActionButton>
         )}
         {canAddSource && (
-          <ActionButton busy={pending === "source"} action={addSource}>
+          <ActionButton disabled={Boolean(pending)} busy={pending === "source"} action={addSource}>
             {t("addSource")}
           </ActionButton>
         )}
         {canContinue && continueTarget && (
-          <ActionButton
+          <ActionButton disabled={Boolean(pending)}
             className={canUpdate || canAddSource ? "button-secondary" : "button-primary"}
             busy={pending === "continue"}
             action={() => runAction("continue", () => navigateToUrl(continueTarget.url))}
@@ -597,7 +675,7 @@ function ReadingContextView({
           </ActionButton>
         )}
         {hasCapability(capabilities, "work.open") && (
-          <ActionButton
+          <ActionButton disabled={Boolean(pending)}
             className="button-secondary"
             busy={pending === "open"}
             action={() => runAction("open", () => transport.openWork({ workId: work.id }), t("openWorkSuccess"))}
@@ -618,6 +696,9 @@ function LegacyMatchedView({
   transport,
   pending,
   feedback,
+  progressFeedback,
+  canSendProgress,
+  updateProgress,
   runAction,
 }: {
   context: PageContext;
@@ -626,15 +707,18 @@ function LegacyMatchedView({
   transport: AuriTransport;
   pending?: string;
   feedback: React.ReactNode;
-  runAction: (key: string, action: () => Promise<unknown>, success?: string) => Promise<void>;
+  progressFeedback: React.ReactNode;
+  canSendProgress: boolean;
+  updateProgress: ReturnType<typeof useProgressConfirmation>["update"];
+  runAction: (key: string, action: () => Promise<unknown>, success?: string, workId?: string) => Promise<void>;
 }) {
   const detected = context.detectedChapter;
   const current = result.work.currentChapter;
-  const updateChapter =
-    detected?.confidence !== "low" &&
-    detected?.numericValue !== undefined &&
-    (current?.numericValue === undefined || detected.numericValue > current.numericValue)
-      ? { value: detected.value, numericValue: detected.numericValue }
+  const detectedValue = normalizeProgressChapter(detected);
+  const currentValue = normalizeProgressChapter(current);
+  const updateChapter = detected && canUseDetectedChapter(detected) && detectedValue?.kind === "numeric" &&
+    (current == null || (currentValue?.kind === "numeric" && detectedValue.value > currentValue.value))
+      ? toChapterValue(detected)
       : undefined;
   const canUpdate = Boolean(updateChapter && hasCapability(capabilities, "progress.update"));
 
@@ -650,31 +734,26 @@ function LegacyMatchedView({
           <div><span>{t("progressCurrent")}</span><strong>{formatChapter(current)}</strong></div>
           <div><span>{t("progressPage")}</span><strong>{formatChapter(detected)}</strong></div>
         </div>
-        {detected?.numericValue !== undefined &&
-          current?.numericValue !== undefined &&
-          detected.numericValue < current.numericValue && (
+        {detectedValue?.kind === "numeric" &&
+          currentValue?.kind === "numeric" &&
+          detectedValue.value < currentValue.value && (
           <p className="hint">{t("previousChapterHint")}</p>
         )}
+        {progressFeedback}
         <div className="actions">
-          {canUpdate && updateChapter && (
-            <ActionButton
+          {canSendProgress && canUpdate && updateChapter && (
+            <ActionButton disabled={Boolean(pending)}
               busy={pending === "progress"}
-              action={() => runAction(
-                "progress",
-                () => transport.updateProgress({
-                  workId: result.work.id,
-                  chapter: updateChapter,
-                  ...(result.source ? { sourceId: result.source.id } : {}),
-                  pageUrl: context.url,
-                }),
-                t("updateProgressSuccess", updateChapter.value),
-              )}
+              action={() => runAction("progress", () => updateProgress({
+                workId: result.work.id, chapter: updateChapter,
+                ...(result.source ? { sourceId: result.source.id } : {}), pageUrl: context.url,
+              }, current ?? null), undefined, result.work.id)}
             >
               {t("updateProgress", updateChapter.value)}
             </ActionButton>
           )}
           {hasCapability(capabilities, "work.open") && (
-            <ActionButton
+            <ActionButton disabled={Boolean(pending)}
               className={canUpdate ? "button-secondary" : "button-primary"}
               busy={pending === "open"}
               action={() => runAction("open", () => transport.openWork({ workId: result.work.id }), t("openWorkSuccess"))}
@@ -683,13 +762,13 @@ function LegacyMatchedView({
             </ActionButton>
           )}
           {!result.source && hasCapability(capabilities, "source.add") && (
-            <ActionButton
+            <ActionButton disabled={Boolean(pending)}
               className="button-secondary"
               busy={pending === "source"}
               action={() => runAction(
                 "source",
                 () => transport.addSource({ workId: result.work.id, url: context.url, name: context.siteName }),
-                t("addSourceSuccess"),
+                t("addSourceSuccess"), result.work.id,
               )}
             >
               {t("addSource")}

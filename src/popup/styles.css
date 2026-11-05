@@ -11,6 +11,7 @@
 body {
   margin: 0;
   width: 360px;
+  max-width: 100%;
   min-height: 280px;
   background: #f8f4e9;
 }
@@ -283,3 +284,18 @@ button:disabled { opacity: .62; cursor: wait; }
 .candidate-list span { min-width: 0; display: grid; gap: 3px; }
 .candidate-list strong { overflow: hidden; color: #14243b; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .candidate-list small { color: #687282; font-size: 11px; }
+
+/* Confirmation stays in the existing progress card; only verified progress is green. */
+.progress-confirmation { margin: 12px 0; padding: 12px; border: 1px solid #d8cdb9; border-left: 3px solid #8a6b33; border-radius: 7px; background: #fdfaf2; overflow-wrap: anywhere; }
+.progress-card .progress-confirmation { margin-bottom: 0; }
+.progress-confirmation > strong { display: block; font-size: 13px; line-height: 1.4; color: #14243b; }
+.progress-confirmation p { margin: 9px 0 0; font-size: 13px; color: #465364; }
+.progress-confirmation dl { margin: 9px 0; font-size: 12px; }
+.progress-confirmation dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 3px 0; }
+.progress-confirmation dt { color: #5d6774; }
+.progress-confirmation dd { margin: 0; text-align: right; color: #14243b; font-weight: 700; }
+.progress-confirmation .button-secondary { width: 100%; margin-top: 11px; }
+.progress-confirmation--confirmed { border-left-color: #365943; }
+.progress-confirmation--confirmed > strong { color: #365943; }
+.progress-confirmation--failed { border-left-color: #963f34; }
+.progress-confirmation--failed > strong { color: #963f34; }

@@ -191,15 +191,6 @@
   "previousChapterHint": {
     "message": "This page is behind your current progress."
   },
-  "updateProgressSuccess": {
-    "message": "Progress updated to $CHAPTER$.",
-    "placeholders": {
-      "chapter": {
-        "content": "$1",
-        "example": "327"
-      }
-    }
-  },
   "updateProgress": {
     "message": "Update to chapter $CHAPTER$",
     "placeholders": {
@@ -295,5 +286,101 @@
   },
   "sourceAmbiguousDescription": {
     "message": "Auri couldn't confirm this source safely."
+  },
+  "progressUpdating": {
+    "message": "Updating progress…"
+  },
+  "progressConfirming": {
+    "message": "Confirming in Auri…"
+  },
+  "progressConfirmed": {
+    "message": "Progress confirmed"
+  },
+  "progressDivergent": {
+    "message": "Saved progress differs"
+  },
+  "progressRejectedTitle": {
+    "message": "Update rejected"
+  },
+  "progressUnconfirmed": {
+    "message": "Confirmation unavailable"
+  },
+  "progressPrevious": {
+    "message": "Previous"
+  },
+  "progressSaved": {
+    "message": "Saved in Auri"
+  },
+  "progressConfirmedDescription": {
+    "message": "Chapter $CHAPTER$ was confirmed in your local Auri library.",
+    "placeholders": {
+      "chapter": {
+        "content": "$1"
+      }
+    }
+  },
+  "progressMismatch": {
+    "message": "Couldn't confirm chapter $REQUESTED$. Auri reported that the saved progress is chapter $SAVED$.",
+    "placeholders": {
+      "requested": {
+        "content": "$1"
+      },
+      "saved": {
+        "content": "$2"
+      }
+    }
+  },
+  "progressMissing": {
+    "message": "Couldn't confirm chapter $CHAPTER$. Auri reported no saved progress.",
+    "placeholders": {
+      "chapter": {
+        "content": "$1"
+      }
+    }
+  },
+  "progressRejected": {
+    "message": "Auri rejected the update. This operation did not save the chapter."
+  },
+  "progressSentUnconfirmed": {
+    "message": "The update was sent, but the saved chapter could not be confirmed."
+  },
+  "progressUncertain": {
+    "message": "It is unclear whether the update completed. Check the saved progress before updating again."
+  },
+  "progressWrongWork": {
+    "message": "The response belongs to another work. This work’s details were kept."
+  },
+  "progressInvalidEvidence": {
+    "message": "The returned chapter could not be compared safely."
+  },
+  "progressVerifyAgain": {
+    "message": "Check again"
+  },
+  "progressConnectionUnconfirmed": {
+    "message": "Couldn't confirm the update"
+  },
+  "progressConnectionInterrupted": {
+    "message": "The connection to Auri was interrupted. Check again to verify the saved chapter."
+  },
+  "possibleMatchEyebrow": {
+    "message": "Possible match"
+  },
+  "possibleMatchTitle": {
+    "message": "Check the work in Auri"
+  },
+  "possibleMatchDescription": {
+    "message": "This page may match the work below, but its identity has not been confirmed. Check in Auri before linking sources or updating progress."
+  },
+  "possibleMatchOpen": {
+    "message": "Check possible work in Auri"
+  },
+  "progressInvalidRequestTitle": {
+    "message": "Could not validate the chapter"
+  },
+  "progressInvalidRequest": {
+    "message": "The chapter could not be sent. Check the details before trying again."
+  },
+  "progressWeakIdentity": {
+    "message": "The new lookup could not confirm the work’s identity safely. Check in Auri before updating again."
   }
 }

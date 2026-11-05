@@ -1,5 +1,5 @@
 import { CAPABILITIES, type PageContext, type WorkResolveResult } from "@auri/protocol";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EXTENSION_VERSION } from "../../src/config/extension";
@@ -23,7 +23,7 @@ const matched: Extract<WorkResolveResult, { status: "matched" }> = {
   match: { matchedBy: "title", confidence: "high" },
 };
 const ready = (result: WorkResolveResult): Extract<PopupState, { status: "ready" }> => ({
-  status: "ready", context, result, capabilities: [...CAPABILITIES],
+  status: "ready", context, result, capabilities: CAPABILITIES.filter(capability => capability !== "work.context"),
 });
 
 const translations = {
@@ -39,11 +39,11 @@ const translations = {
     addWorkSuccess: "Auri opened to add the work.", detected: "Detected chapter: Ch. 327.5",
     ambiguous: "We found more than one possible work.", open: "Open", current: "Current: Ch. 326",
     namedSuccess: `${matched.work.title} opened in Auri.`,
-    update: "Update to chapter 327.5", updateSuccess: "Progress updated to 327.5.", wait: "Please wait…",
+    update: "Update to chapter 327.5", updateSuccess: "Chapter 327.5 was confirmed in your local Auri library.", wait: "Please wait…",
     openWork: "Open in Auri", openWorkSuccess: "Work opened in Auri.",
     addSource: "Add this source", addSourceSuccess: "Source added to the work.",
     conflict: "This change needs to be confirmed in the Auri app.",
-    failed: "Couldn't complete the action. Please try again.",
+    failed: "It is unclear whether the update completed. Check the saved progress before updating again.",
     previous: "This page is behind your current progress.",
   },
   pt_BR: {
@@ -58,11 +58,11 @@ const translations = {
     addWorkSuccess: "Auri aberto para adicionar a obra.", detected: "Capítulo detectado: Cap. 327.5",
     ambiguous: "Encontramos mais de uma obra possível.", open: "Abrir", current: "Atual: Cap. 326",
     namedSuccess: `${matched.work.title} aberto no Auri.`,
-    update: "Atualizar para capítulo 327.5", updateSuccess: "Progresso atualizado para 327.5.", wait: "Aguarde…",
+    update: "Atualizar para capítulo 327.5", updateSuccess: "O capítulo 327.5 foi confirmado na biblioteca local do Auri.", wait: "Aguarde…",
     openWork: "Abrir no Auri", openWorkSuccess: "Obra aberta no Auri.",
     addSource: "Adicionar esta fonte", addSourceSuccess: "Fonte adicionada à obra.",
     conflict: "O Auri precisa que essa alteração seja confirmada no aplicativo.",
-    failed: "Não foi possível concluir. Tente novamente.",
+    failed: "Não foi possível saber se a atualização foi concluída. Consulte o progresso antes de tentar atualizar novamente.",
     previous: "Esta página está antes do progresso atual.",
   },
 };
@@ -135,10 +135,11 @@ describe.each(["en", "pt_BR"] as const)("popup localizado: %s", (locale) => {
   it("traduz atualização, loading e feedback sem mudar o capítulo enviado", async () => {
     const transport = new MockAuriTransport("matched");
     const update = vi.spyOn(transport, "updateProgress").mockResolvedValue({ updated: true });
+    vi.spyOn(transport, "resolveWork").mockResolvedValue({ ...matched, work: { ...matched.work, currentChapter: { value: "327.5", numericValue: 327.5 } } });
     renderState(ready(matched), transport);
     fireEvent.click(screen.getByRole("button", { name: copy.update }));
     expect(screen.getByRole("button", { name: copy.wait })).toBeDisabled();
-    expect(await screen.findByRole("status")).toHaveTextContent(copy.updateSuccess);
+    expect(await screen.findByText(copy.updateSuccess)).toBeInTheDocument();
     expect(update).toHaveBeenCalledWith({
       workId: matched.work.id, sourceId: matched.source!.id,
       chapter: { value: "327.5", numericValue: 327.5 }, pageUrl: context.url,
@@ -166,7 +167,7 @@ describe.each(["en", "pt_BR"] as const)("popup localizado: %s", (locale) => {
       : new TransportFailure("error"));
     renderState(ready(matched), transport);
     fireEvent.click(screen.getByRole("button", { name: copy.update }));
-    expect(await screen.findByRole("status")).toHaveTextContent(copy[failure]);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(copy[failure]));
     expect(screen.queryByText("INTERNAL")).not.toBeInTheDocument();
   });
 
