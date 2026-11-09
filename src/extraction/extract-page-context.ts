@@ -14,6 +14,7 @@ const LABELED_CHAPTER = new RegExp(
   "iu",
 );
 const METADATA_NUMBER = new RegExp(String.raw`^\s*${CHAPTER_VALUE}\s*$`, "u");
+const TOONLIVRE_CHAPTER_PATH = /^\/(?!wp-)[a-z][a-z0-9]*(?:-[a-z0-9]+)+\/(\d{1,16})\/?$/u;
 
 export type ExtractionResult =
   | { ok: true; context: PageContext; coverUrl?: string }
@@ -64,14 +65,18 @@ function chapterFrom(
 }
 
 export function detectChapter(snapshot: PageSnapshot): DetectedChapter | undefined {
+  const url = parseHttpUrl(snapshot.currentUrl);
+  if (url?.hostname === "toonlivre.net" || url?.hostname === "www.toonlivre.net") {
+    const chapter = TOONLIVRE_CHAPTER_PATH.exec(url.pathname)?.[1];
+    const evidence = chapterFrom(chapter, "url", "high", true);
+    if (evidence && Number.isSafeInteger(evidence.numericValue)) return evidence;
+  }
+
   const urlEvidence = chapterFrom(snapshot.currentUrl, "url", "high");
   if (urlEvidence) return urlEvidence;
 
-  const titleEvidence = chapterFrom(
-    snapshot.ogTitle ?? snapshot.documentTitle,
-    "page-title",
-    "medium",
-  );
+  const titleEvidence = chapterFrom(snapshot.ogTitle, "page-title", "medium")
+    ?? chapterFrom(snapshot.documentTitle, "page-title", "medium");
   if (titleEvidence) return titleEvidence;
 
   const metadataEvidence = chapterFrom(snapshot.metadataChapter, "metadata", "medium", true);

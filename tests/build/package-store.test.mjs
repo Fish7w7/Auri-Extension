@@ -72,9 +72,9 @@ describe("pacote da loja", () => {
     expect(names).toContain("icons/auri-128.png");
     expect(names).toContain("_locales/en/messages.json");
     expect(names).toContain("_locales/pt_BR/messages.json");
-    expect(STORE_PACKAGE_NAME).toBe("auri-extension-0.3.1-chromium.zip");
-    expect(EMBEDDED_PACKAGE_NAME).toBe("auri-extension-0.3.1-embedded.zip");
-    expect(EMBEDDED_METADATA_NAME).toBe("auri-extension-0.3.1-embedded.json");
+    expect(STORE_PACKAGE_NAME).toBe("auri-extension-0.3.2-chromium.zip");
+    expect(EMBEDDED_PACKAGE_NAME).toBe("auri-extension-0.3.2-embedded.zip");
+    expect(EMBEDDED_METADATA_NAME).toBe("auri-extension-0.3.2-embedded.json");
     expect(names).not.toContain("assets/popup.js.map");
     expect(names.some((name) => /^(node_modules|src|tests)\//u.test(name))).toBe(false);
   });
@@ -132,7 +132,7 @@ describe("pacote da loja", () => {
     expect(names).toContain("manifest.json");
     expect(names.some((name) => name.startsWith("artifacts/"))).toBe(false);
     expect(metadata).toEqual({
-      version: "0.3.1",
+      version: "0.3.2",
       extensionId: "agefiaohfielfgadiagemnflekbboblp",
       sha256: createHash("sha256").update(zip).digest("hex"),
       manifestVersion: 3,
@@ -146,5 +146,13 @@ describe("pacote da loja", () => {
     const { dist } = await createFixture();
     await writeFile(resolve(dist, "embedded-extension.json"), "{}");
     await expect(validateProductionDist(dist)).rejects.toThrow("arquivo inesperado");
+  });
+
+  it.each(["host_permissions", "content_scripts"])("recusa o campo de acesso %s no manifesto PROD", async (key) => {
+    const { dist } = await createFixture();
+    const file = resolve(dist, "manifest.json");
+    const manifest = JSON.parse(await readFile(file, "utf8"));
+    await writeFile(file, JSON.stringify({ ...manifest, [key]: [] }));
+    await expect(validateProductionDist(dist)).rejects.toThrow("campo de acesso inesperado");
   });
 });

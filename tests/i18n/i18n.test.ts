@@ -37,17 +37,18 @@ describe("catálogos i18n e manifest", () => {
     expect(manifest.action.default_title).toBe("__MSG_actionTitle__");
   });
 
-  it("mantém versão 0.3.1, Protocol 0.2.0 e permissões mínimas", () => {
+  it("mantém versão 0.3.2, Protocol 0.2.1 e permissões mínimas", () => {
     const lock = JSON.parse(readFileSync(resolve(projectRoot, "package-lock.json"), "utf8"));
-    expect(packageMetadata.version).toBe("0.3.1");
+    expect(packageMetadata.version).toBe("0.3.2");
     expect(manifest.version).toBe(packageMetadata.version);
     expect(lock.version).toBe(packageMetadata.version);
     expect(lock.packages[""].version).toBe(packageMetadata.version);
-    expect(packageMetadata.dependencies["@auri/protocol"]).toBe("github:Fish7w7/Auri-Protocol#v0.2.0");
-    expect(lock.packages["node_modules/@auri/protocol"].version).toBe("0.2.0");
-    expect(lock.packages["node_modules/@auri/protocol"].resolved).toContain(
-      "d49202778bd1eedb8a24e944982a432c6c7c6d6b",
-    );
+    expect(packageMetadata.dependencies["@auri/protocol"]).toBe("file:vendor/auri-protocol-0.2.1.tgz");
+    expect(lock.packages["node_modules/@auri/protocol"]).toMatchObject({
+      version: "0.2.1",
+      resolved: "file:vendor/auri-protocol-0.2.1.tgz",
+      dependencies: { zod: "4.6.6" },
+    });
     expect(manifest.manifest_version).toBe(3);
     expect(manifest.permissions).toEqual(["activeTab", "scripting", "nativeMessaging"]);
     for (const key of ["background", "host_permissions", "optional_permissions", "content_scripts"]) {

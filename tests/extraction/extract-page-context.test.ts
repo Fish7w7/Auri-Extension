@@ -38,6 +38,44 @@ describe("extractPageContext", () => {
     });
   });
 
+  it.each([
+    ["o-vilao-de-cabelos-amarelos-no-romance-da-personagem-principal-feminina-quer-felicidade/95", 95],
+    ["o-alquimista-maligno-nao-consegue-lidar-com-seu-proprio-experimento/15", 15],
+    ["magnata-mulherengo/55", 55],
+  ])("detecta o capítulo da rota do ToonLivre %s sem depender do HTML", (path, chapter) => {
+    const result = extractPageContext(snapshot({ currentUrl: `https://toonlivre.net/${path}` }));
+
+    expect(result).toMatchObject({ ok: true, context: { detectedChapter: {
+      value: String(chapter), numericValue: chapter, source: "url", confidence: "high",
+    } } });
+  });
+
+  it.each([
+    "https://toonlivre.net.evil.example/magnata-mulherengo/55",
+    "https://reader.example/magnata-mulherengo/55",
+    "https://toonlivre.net/55",
+    "https://toonlivre.net/magnata-mulherengo?page=55",
+    "https://toonlivre.net/magnata-mulherengo/55/66",
+    "https://toonlivre.net/wp-json/55",
+    "https://toonlivre.net/magnata-mulherengo/9999999999999999",
+  ])("não usa um número sem evidência de capítulo em %s", (currentUrl) => {
+    const result = extractPageContext(snapshot({ currentUrl }));
+
+    expect(result.ok && result.context.detectedChapter).toBeUndefined();
+  });
+
+  it("usa o capítulo explícito do título do documento quando og:title só identifica a obra", () => {
+    const result = extractPageContext(snapshot({
+      ogTitle: "Nano Machine",
+      documentTitle: "Nano Machine — Capítulo 11",
+    }));
+
+    expect(result).toMatchObject({ ok: true, context: {
+      title: "Nano Machine",
+      detectedChapter: { value: "11", numericValue: 11, source: "page-title", confidence: "medium" },
+    } });
+  });
+
   it("aceita canonical HTTP(S) e rejeita canonical insegura", () => {
     expect(extractPageContext(snapshot({ canonicalHref: "/works/nano-machine" }))).toMatchObject({
       ok: true,

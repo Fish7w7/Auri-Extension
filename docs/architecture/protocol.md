@@ -1,16 +1,16 @@
 # Auri Protocol
 
-A Auri Extension usa `@auri/protocol` como contrato compartilhado com o Auri Desktop. A versão atual da dependência é **0.2.0**, com `protocolVersion` **1**.
+A Auri Extension usa `@auri/protocol` como contrato compartilhado com o Auri Desktop. A versão atual da dependência é **0.2.1**, com `protocolVersion` **1**.
 
 ## Dependência
 
-O pacote é instalado diretamente da tag GitHub correspondente:
+O npm instala a mesma distribuição do Protocol usada no Desktop:
 
 ```json
-"@auri/protocol": "github:Fish7w7/Auri-Protocol#v0.2.0"
+"@auri/protocol": "file:vendor/auri-protocol-0.2.1.tgz"
 ```
 
-A referência é pinada e não depende da presença física de um repositório irmão. A tag declara o lifecycle `prepare`, responsável por gerar `dist/` durante a instalação a partir do Git.
+O tarball inclui o código-fonte e os módulos compilados. O lockfile fixa a integridade do arquivo e a versão 4.6.6 do Zod. O pacote deriva de [Auri-Protocol v0.2.0](https://github.com/Fish7w7/Auri-Protocol/tree/v0.2.0), com a migração de validação compatível com wire v1.
 
 Para desenvolvimento simultâneo dos dois repositórios, `npm link` pode ser usado como conveniência local, sem modificar a dependência oficial.
 

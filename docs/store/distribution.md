@@ -1,6 +1,6 @@
-# Distribuição da Auri Extension 0.3.1
+# Distribuição da Auri Extension 0.3.2
 
-A versão 0.3.1 possui duas variantes de produção separadas. Ambas usam `app.auri.native_host`, Manifest V3, as locales `en` e `pt_BR` e as mesmas permissões.
+A versão 0.3.2 possui duas variantes de produção separadas. Ambas usam `app.auri.native_host`, Manifest V3, as locales `en` e `pt_BR` e as mesmas permissões.
 
 ## Store
 
@@ -10,7 +10,7 @@ npm run package:store
 ```
 
 - Build: `dist/`.
-- Pacote: `release/auri-extension-0.3.1-chromium.zip`.
+- Pacote: `release/auri-extension-0.3.2-chromium.zip`.
 - Destino: atualização da extensão existente no Microsoft Edge Add-ons.
 - ID oficial do Edge: `alnngjgmhiebpnjefjmhbhmhfpgoibnh`.
 - O manifest não contém `key`; a identidade continua sendo administrada pela loja.
@@ -23,8 +23,8 @@ npm run package:embedded
 ```
 
 - Build: `artifacts/embedded/`.
-- Pacote: `release/auri-extension-0.3.1-embedded.zip`.
-- Metadata: `release/auri-extension-0.3.1-embedded.json`.
+- Pacote: `release/auri-extension-0.3.2-embedded.zip`.
+- Metadata: `release/auri-extension-0.3.2-embedded.json`.
 - Destino: instalação manual guiada no Chrome e Brave pelo Auri Desktop.
 - ID fixo: `agefiaohfielfgadiagemnflekbboblp`.
 

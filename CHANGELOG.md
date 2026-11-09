@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+
+- Detecta o capítulo nas URLs de leitura do ToonLivre e consulta o título da aba quando `og:title` traz apenas o nome da obra.
+- Usa Auri Protocol 0.2.1 com Zod 4.6.6. O protocolo wire v1 e as permissões `activeTab`, `scripting` e `nativeMessaging` são os mesmos.
+
 ## 0.3.1
 
 - Confirma o progresso com uma releitura do Auri e diferencia atualização recusada de entrega incerta.

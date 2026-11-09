@@ -134,6 +134,9 @@ export async function validateProductionDist(distDirectory, { variant = "store" 
     "As permissões do manifest não correspondem ao conjunto mínimo aprovado.",
   );
   assert(!("background" in manifest), "O pacote não pode conter service worker/background.");
+  for (const key of ["host_permissions", "optional_permissions", "optional_host_permissions", "content_scripts", "externally_connectable"]) {
+    assert(!(key in manifest), `O pacote contém um campo de acesso inesperado: ${key}.`);
+  }
   assert(manifest.action?.default_popup === "index.html", "Popup de action inválido.");
   assert(names.includes("index.html"), "index.html ausente.");
   assert(names.some((name) => name.startsWith("assets/") && name.endsWith(".js")), "JS do popup ausente.");
@@ -157,6 +160,7 @@ export async function validateProductionDist(distDirectory, { variant = "store" 
     .join("\n");
   assert(javascript.includes(PRODUCTION_HOST), "O bundle não contém o Native Host de produção.");
   assert(!javascript.includes(DEVELOPMENT_HOST), "O bundle contém o Native Host DEV.");
+  assert(!javascript.includes(`${PRODUCTION_HOST}.e2e`), "O bundle contém o Native Host E2E.");
   assert(!javascript.includes("Auri-Dev"), "O bundle contém configuração DEV.");
   assert(
     !/(?:MockAuriTransport|MOCK_SCENARIOS|matched_no_source|missing_capability)/u.test(javascript),
