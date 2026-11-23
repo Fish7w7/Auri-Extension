@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ChapterValue, KnownCapability, PageContext, ProgressUpdateParams, WorkContextParams, WorkContextResult, WorkResolveResult } from "@auri/protocol";
 import type { AuriTransport } from "../transport/auri-transport";
 import { TransportFailure } from "../transport/auri-transport";
+import { createWorkContextParams } from "./page-context";
 import { assertTrustedWorkIdentity, hasTrustedWorkIdentity } from "./work-identity";
 import { canUseDetectedChapter, compareProgressChapters, isDefinitiveProgressRejection, normalizeProgressChapter } from "./progress-confirmation";
 
@@ -49,12 +50,7 @@ export function useProgressConfirmation(options: Options) {
   const read = async (): Promise<Reading> => {
     if (!options.capabilities.includes("work.context") && !options.capabilities.includes("work.resolve")) throw new Error("Reading unavailable");
     return options.capabilities.includes("work.context")
-    ? { kind: "context", result: await (options.readContext ?? (params => options.transport.getWorkContext(params)))({
-        workId: options.workId,
-        page: { url: options.context.url,
-          ...(options.context.canonicalUrl ? { canonicalUrl: options.context.canonicalUrl } : {}),
-          ...(options.context.detectedChapter ? { detectedChapter: options.context.detectedChapter } : {}) },
-      }) }
+    ? { kind: "context", result: await (options.readContext ?? (params => options.transport.getWorkContext(params)))(createWorkContextParams(options.workId, options.context)) }
     : { kind: "resolve", result: await options.transport.resolveWork(options.context) };
   };
 
@@ -116,7 +112,7 @@ export function useProgressConfirmation(options: Options) {
   // Used by source.add too: retain the card and reject a context for another Work.
   const refreshContext = async (params: WorkContextParams) => {
     assertTrustedWorkIdentity(options.resolution, params.workId);
-    if (params.workId !== options.workId || !options.capabilities.includes("work.context")) throw new Error("Reading unavailable");
+    if (!scope.active || params.workId !== options.workId || !options.capabilities.includes("work.context")) throw new Error("Reading unavailable");
     const sequence = ++scope.sequence;
     const result = await (options.readContext ?? (input => options.transport.getWorkContext(input)))(params);
     if (!isCurrent(sequence) || result.work.id !== options.workId) throw new Error("Stale work context");

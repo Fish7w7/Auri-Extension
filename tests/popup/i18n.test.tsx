@@ -33,7 +33,7 @@ const translations = {
     integration_unavailable: "The Auri browser integration isn't configured.",
     incompatible: "This extension version isn't compatible with your current Auri version.",
     error: "Couldn't connect to Auri right now.", retry: "Try again",
-    context: "Analyzed page", currentPage: "Current page", progress: "Progress",
+    context: "Reading context", currentPage: "Current page", progress: "Progress",
     chapter: "Ch. 327.5", unknown: "Not provided", source: "Source recognized",
     notFound: "This work isn't in your Library yet.", addWork: "Add to Auri",
     addWorkSuccess: "Auri opened to add the work.", detected: "Detected chapter: Ch. 327.5",
@@ -52,7 +52,7 @@ const translations = {
     integration_unavailable: "A integração do navegador com o Auri não está configurada.",
     incompatible: "Esta versão da extensão não é compatível com a versão atual do Auri.",
     error: "Não foi possível consultar o Auri agora.", retry: "Tentar novamente",
-    context: "Página analisada", currentPage: "Página atual", progress: "Progresso",
+    context: "Contexto da leitura", currentPage: "Página atual", progress: "Progresso",
     chapter: "Cap. 327.5", unknown: "Não informado", source: "Fonte reconhecida",
     notFound: "Esta obra ainda não está na sua Biblioteca.", addWork: "Adicionar ao Auri",
     addWorkSuccess: "Auri aberto para adicionar a obra.", detected: "Capítulo detectado: Cap. 327.5",
@@ -93,7 +93,7 @@ describe.each(["en", "pt_BR"] as const)("popup localizado: %s", (locale) => {
     expect(screen.getByRole("region", { name: copy.context })).toBeInTheDocument();
     expect(screen.getByLabelText(copy.progress)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: matched.work.title })).toBeInTheDocument();
-    expect(screen.getAllByText(context.siteName!)).toHaveLength(2);
+    expect(screen.getByText(context.siteName!)).toBeInTheDocument();
     expect(screen.getByText(copy.chapter)).toBeInTheDocument();
     expect(screen.getByText(copy.source)).toBeInTheDocument();
   });

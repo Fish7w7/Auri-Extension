@@ -11,12 +11,12 @@ Ela permite reconhecer obras cadastradas, consultar onde você parou, continuar 
 ## O que você pode fazer
 
 - reconhecer uma obra da sua biblioteca na página atual;
-- consultar o progresso salvo e o capítulo identificado na página;
+- comparar, lado a lado no popup de 400 px, o capítulo salvo na biblioteca e o detectado na página;
 - abrir a obra no Auri Desktop;
 - adicionar uma obra que ainda não está na biblioteca;
 - adicionar a página como uma nova fonte;
 - atualizar o progresso quando um capítulo posterior for detectado;
-- aproveitar a capa informada pela página quando a versão do Desktop oferecer suporte.
+- incluir a capa informada pela página ao cadastrar uma nova obra, quando o Desktop oferecer suporte.
 
 A extração é conservadora: uma ação só é oferecida quando há contexto suficiente e sempre depende da sua interação.
 

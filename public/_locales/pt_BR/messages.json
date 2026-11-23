@@ -16,7 +16,7 @@
     "placeholders": {
       "version": {
         "content": "$1",
-        "example": "0.3.2"
+        "example": "0.4.0"
       }
     }
   },
@@ -59,9 +59,6 @@
   "statusUnsupported": {
     "message": "Página não suportada"
   },
-  "unsupportedEyebrow": {
-    "message": "Página indisponível"
-  },
   "unsupportedTitle": {
     "message": "Esta página não pode ser analisada pelo Auri."
   },
@@ -71,9 +68,6 @@
   "statusDisconnected": {
     "message": "Auri desconectado"
   },
-  "disconnectedEyebrow": {
-    "message": "Desconectado"
-  },
   "disconnectedTitle": {
     "message": "O Auri Desktop não está disponível."
   },
@@ -81,9 +75,6 @@
     "message": "Abra o Auri no computador para usar esta extensão."
   },
   "statusIntegrationUnavailable": {
-    "message": "Integração indisponível"
-  },
-  "integrationUnavailableEyebrow": {
     "message": "Integração indisponível"
   },
   "integrationUnavailableTitle": {
@@ -98,9 +89,6 @@
   "statusIncompatible": {
     "message": "Protocolo incompatível"
   },
-  "incompatibleEyebrow": {
-    "message": "Atualização necessária"
-  },
   "incompatibleTitle": {
     "message": "Esta versão da extensão não é compatível com a versão atual do Auri."
   },
@@ -110,9 +98,6 @@
   "statusError": {
     "message": "Falha temporária"
   },
-  "errorEyebrow": {
-    "message": "Algo não saiu como esperado"
-  },
   "errorTitle": {
     "message": "Não foi possível consultar o Auri agora."
   },
@@ -121,9 +106,6 @@
   },
   "statusConnected": {
     "message": "Auri conectado"
-  },
-  "notFoundEyebrow": {
-    "message": "Não encontrada"
   },
   "notFoundTitle": {
     "message": "Esta obra ainda não está na sua Biblioteca."
@@ -142,9 +124,6 @@
   },
   "addWork": {
     "message": "Adicionar ao Auri"
-  },
-  "ambiguousEyebrow": {
-    "message": "Escolha necessária"
   },
   "ambiguousTitle": {
     "message": "Encontramos mais de uma obra possível."
@@ -183,10 +162,10 @@
     "message": "Progresso"
   },
   "progressCurrent": {
-    "message": "Atual"
+    "message": "Biblioteca"
   },
   "progressPage": {
-    "message": "Página"
+    "message": "Nesta página"
   },
   "previousChapterHint": {
     "message": "Esta página está antes do progresso atual."
@@ -382,5 +361,14 @@
   },
   "progressWeakIdentity": {
     "message": "A nova consulta não confirmou a identidade da obra com segurança. Confira no Auri antes de atualizar novamente."
+  },
+  "progressAhead": {
+    "message": "Esta página está adiante do progresso salvo."
+  },
+  "progressUnknown": {
+    "message": "Não foi possível comparar os capítulos."
+  },
+  "progressCannotUpdate": {
+    "message": "A atualização de progresso está indisponível nesta página."
   }
 }

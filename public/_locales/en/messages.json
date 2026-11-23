@@ -16,7 +16,7 @@
     "placeholders": {
       "version": {
         "content": "$1",
-        "example": "0.3.2"
+        "example": "0.4.0"
       }
     }
   },
@@ -59,9 +59,6 @@
   "statusUnsupported": {
     "message": "Unsupported page"
   },
-  "unsupportedEyebrow": {
-    "message": "Page unavailable"
-  },
   "unsupportedTitle": {
     "message": "Auri can't analyze this page."
   },
@@ -71,9 +68,6 @@
   "statusDisconnected": {
     "message": "Auri disconnected"
   },
-  "disconnectedEyebrow": {
-    "message": "Disconnected"
-  },
   "disconnectedTitle": {
     "message": "Auri Desktop is unavailable."
   },
@@ -81,9 +75,6 @@
     "message": "Open Auri on your computer to use this extension."
   },
   "statusIntegrationUnavailable": {
-    "message": "Integration unavailable"
-  },
-  "integrationUnavailableEyebrow": {
     "message": "Integration unavailable"
   },
   "integrationUnavailableTitle": {
@@ -98,9 +89,6 @@
   "statusIncompatible": {
     "message": "Incompatible protocol"
   },
-  "incompatibleEyebrow": {
-    "message": "Update required"
-  },
   "incompatibleTitle": {
     "message": "This extension version isn't compatible with your current Auri version."
   },
@@ -110,9 +98,6 @@
   "statusError": {
     "message": "Temporary error"
   },
-  "errorEyebrow": {
-    "message": "Something went wrong"
-  },
   "errorTitle": {
     "message": "Couldn't connect to Auri right now."
   },
@@ -121,9 +106,6 @@
   },
   "statusConnected": {
     "message": "Auri connected"
-  },
-  "notFoundEyebrow": {
-    "message": "Not found"
   },
   "notFoundTitle": {
     "message": "This work isn't in your Library yet."
@@ -142,9 +124,6 @@
   },
   "addWork": {
     "message": "Add to Auri"
-  },
-  "ambiguousEyebrow": {
-    "message": "Choose a work"
   },
   "ambiguousTitle": {
     "message": "We found more than one possible work."
@@ -183,10 +162,10 @@
     "message": "Progress"
   },
   "progressCurrent": {
-    "message": "Current"
+    "message": "Library"
   },
   "progressPage": {
-    "message": "Page"
+    "message": "On this page"
   },
   "previousChapterHint": {
     "message": "This page is behind your current progress."
@@ -382,5 +361,14 @@
   },
   "progressWeakIdentity": {
     "message": "The new lookup could not confirm the work’s identity safely. Check in Auri before updating again."
+  },
+  "progressAhead": {
+    "message": "This page is ahead of your saved progress."
+  },
+  "progressUnknown": {
+    "message": "The chapter order is unknown."
+  },
+  "progressCannotUpdate": {
+    "message": "Progress updates are unavailable for this page."
   }
 }

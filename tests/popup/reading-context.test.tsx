@@ -408,3 +408,40 @@ describe("estados de conexão", () => {
     finishRetry();
   });
 });
+
+describe("cartão de leitura", () => {
+  it("mantém visível a relação informada quando a atualização está indisponível", () => {
+    const state = ready(baseContext);
+    render(<PopupView state={{ ...state, capabilities: ["work.context", "work.open"] }}
+      transport={new MockAuriTransport("context_ahead")} onRetry={vi.fn()} />);
+
+    expect(screen.getByText("Esta página está adiante do progresso salvo.")).toBeVisible();
+    expect(screen.getByText("A atualização de progresso está indisponível nesta página.")).toBeVisible();
+    expect(screen.queryByRole("button", { name: /Atualizar/ })).toBeNull();
+    expect(screen.getByRole("button", { name: /Continuar/ })).toHaveClass("button-primary");
+  });
+
+  it("exibe dados longos integralmente e mantém a ação da obra disponível", () => {
+    const title = "Uma longa história ".repeat(14).trim();
+    const name = "Fonte".repeat(45);
+    renderContext({ ...baseContext, work: { ...baseContext.work, title },
+      source: { ...baseContext.source, name } });
+    expect(screen.getByRole("heading", { name: title })).toBeVisible();
+    expect(screen.getByText(name)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Abrir no Auri" })).toBeEnabled();
+  });
+
+  it("bloqueia as outras ações durante abertura e apresenta a falha com nova tentativa disponível", async () => {
+    const transport = new MockAuriTransport("context_ahead");
+    let rejectOpen!: (error: Error) => void;
+    const open = vi.spyOn(transport, "openWork").mockImplementation(() => new Promise((_, reject) => { rejectOpen = reject; }));
+    renderContext(baseContext, { transport });
+    fireEvent.click(screen.getByRole("button", { name: "Abrir no Auri" }));
+    expect(screen.getByRole("button", { name: /Atualizar/ })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Aguarde…" }));
+    rejectOpen(new Error("offline"));
+    expect(await screen.findByText("Não foi possível concluir. Tente novamente.")).toHaveClass("feedback--error");
+    expect(open).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Abrir no Auri" })).toBeEnabled();
+  });
+});

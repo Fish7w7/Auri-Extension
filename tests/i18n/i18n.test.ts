@@ -37,9 +37,9 @@ describe("catálogos i18n e manifest", () => {
     expect(manifest.action.default_title).toBe("__MSG_actionTitle__");
   });
 
-  it("mantém versão 0.3.2, Protocol 0.2.1 e permissões mínimas", () => {
+  it("mantém versão 0.4.0, Protocol 0.2.1 e permissões mínimas", () => {
     const lock = JSON.parse(readFileSync(resolve(projectRoot, "package-lock.json"), "utf8"));
-    expect(packageMetadata.version).toBe("0.3.2");
+    expect(packageMetadata.version).toBe("0.4.0");
     expect(manifest.version).toBe(packageMetadata.version);
     expect(lock.version).toBe(packageMetadata.version);
     expect(lock.packages[""].version).toBe(packageMetadata.version);
@@ -85,12 +85,21 @@ describe("catálogos i18n e manifest", () => {
   it("cobre todas as mensagens usadas em src e não deixa texto JSX de UI hardcoded", () => {
     const used = new Set(manifestMessages.map((reference) => reference.slice(6, -2)));
     const literals: string[] = [];
-    for (const file of sourceFiles(resolve(projectRoot, "src"))) {
-      const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true);
+    const files = sourceFiles(resolve(projectRoot, "src"));
+    const program = ts.createProgram(files, { resolveJsonModule: true, jsx: ts.JsxEmit.ReactJSX,
+      module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true });
+    const checker = program.getTypeChecker();
+    for (const file of files) {
+      const source = program.getSourceFile(file)!;
       const visit = (node: ts.Node) => {
         if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "t") {
           const key = node.arguments[0];
-          if (key && ts.isStringLiteral(key)) used.add(key.text);
+          // State tables and conditional labels narrow to unions of literal message keys.
+          const type = checker.getTypeAtLocation(key);
+          for (const choice of type.isUnion() ? type.types : [type]) {
+            if (!choice.isStringLiteral()) throw new Error(`Unresolved translation key: ${key.getText(source)}`);
+            used.add(choice.value);
+          }
         }
         if (ts.isJsxText(node) && node.text.trim()) literals.push(node.text.trim());
         if (ts.isJsxAttribute(node) && ["aria-label", "title", "alt", "connection"].includes(node.name.getText(source))) {
